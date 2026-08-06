@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { getBoard } from "./api/boards";
+import { createCard } from "./api/cards";
 import type { Board } from "./types";
 import Login from "./pages/Login";
 
@@ -7,14 +8,30 @@ function App() {
   const [connecte, setConnecte] = useState<boolean>(!!localStorage.getItem("token"));
   const [board, setBoard] = useState<Board | null>(null);
   const [erreur, setErreur] = useState<string | null>(null);
+  const [nouveauTitre, setNouveauTitre] = useState<Record<number, string>>({});
+
+  function chargerBoard() {
+    getBoard(1).then(setBoard).catch((e) => setErreur(e.message));
+  }
 
   useEffect(() => {
-    if (!connecte) return;   // pas connecté → on ne charge rien
-    getBoard(1).then(setBoard).catch((e) => setErreur(e.message));
+    if (!connecte) return;
+    chargerBoard();
   }, [connecte]);
 
-  if (!connecte) return <Login onLogin={() => setConnecte(true)} />;
+  async function ajouterCarte(columnId: number) {
+    const titre = nouveauTitre[columnId]?.trim();
+    if (!titre) return;
+    try {
+      await createCard(titre, columnId);
+      setNouveauTitre((prev) => ({ ...prev, [columnId]: "" }));   // vide le champ
+      chargerBoard();                                             // recharge le board
+    } catch (e) {
+      setErreur(e instanceof Error ? e.message : "Erreur inconnue");
+    }
+  }
 
+  if (!connecte) return <Login onLogin={() => setConnecte(true)} />;
   if (erreur) return <p>Erreur : {erreur}</p>;
   if (!board) return <p>Chargement...</p>;
 
@@ -27,6 +44,14 @@ function App() {
           {col.cards.map((card) => (
             <p key={card.id}>{card.title}</p>
           ))}
+          <input
+            value={nouveauTitre[col.id] ?? ""}
+            onChange={(e) =>
+              setNouveauTitre((prev) => ({ ...prev, [col.id]: e.target.value }))
+            }
+            placeholder="Nouvelle carte..."
+          />
+          <button onClick={() => ajouterCarte(col.id)}>Ajouter</button>
         </div>
       ))}
     </div>
