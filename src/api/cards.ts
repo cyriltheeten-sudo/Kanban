@@ -7,3 +7,7 @@ export function createCard(title: string, columnId: number): Promise<Card> {
     body: JSON.stringify({ title, columnId }),
   });
 }
+
+export function deleteCard(id: number): Promise<void> {
+  return apiFetch<void>(`/cards/${id}`, { method: "DELETE" });
+}

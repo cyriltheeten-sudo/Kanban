@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { getBoard } from "./api/boards";
-import { createCard } from "./api/cards";
+import { createCard, deleteCard } from "./api/cards";
 import type { Board } from "./types";
 import Login from "./pages/Login";
 
@@ -31,6 +31,15 @@ function App() {
     }
   }
 
+  async function supprimerCarte(id: number) {
+  try {
+    await deleteCard(id);
+    chargerBoard();
+  } catch (e) {
+    setErreur(e instanceof Error ? e.message : "Erreur inconnue");
+  }
+}
+
   if (!connecte) return <Login onLogin={() => setConnecte(true)} />;
   if (erreur) return <p>Erreur : {erreur}</p>;
   if (!board) return <p>Chargement...</p>;
@@ -42,7 +51,10 @@ function App() {
         <div key={col.id}>
           <h2>{col.title}</h2>
           {col.cards.map((card) => (
-            <p key={card.id}>{card.title}</p>
+            <p key={card.id}>
+              {card.title}
+              <button onClick={() => supprimerCarte(card.id)}>✕</button>
+            </p>
           ))}
           <input
             value={nouveauTitre[col.id] ?? ""}
