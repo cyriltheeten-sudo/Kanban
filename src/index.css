@@ -1,0 +1,28 @@
+@import "tailwindcss";
+
+@theme {
+  --font-display: "Space Grotesk", sans-serif;
+  --font-body: "Inter", sans-serif;
+}
+
+body {
+  font-family: var(--font-body);
+  background: #0a0a0f;
+}
+
+/* Carte "pierre précieuse" : dégradé de la gemme vers le noir, bordure gemme */
+.gem-card {
+  background: linear-gradient(135deg, color-mix(in srgb, var(--gem) 14%, #0a0a0f), #0a0a0f 70%);
+  border: 1px solid color-mix(in srgb, var(--gem) 22%, transparent);
+  transition: border-color .2s ease, box-shadow .2s ease, transform .2s ease;
+}
+.gem-card:hover {
+  border-color: color-mix(in srgb, var(--gem) 55%, transparent);
+  box-shadow: 0 6px 24px -8px color-mix(in srgb, var(--gem) 55%, transparent);
+  transform: translateY(-2px);
+}
+
+/* Barre de défilement horizontale discrète */
+.scroll-kanban::-webkit-scrollbar { height: 8px; }
+.scroll-kanban::-webkit-scrollbar-thumb { background: rgba(255,255,255,.08); border-radius: 9999px; }
+.scroll-kanban::-webkit-scrollbar-track { background: transparent; }
