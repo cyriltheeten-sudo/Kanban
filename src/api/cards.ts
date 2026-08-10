@@ -18,3 +18,10 @@ export function updateCard(id: number, title: string, description?: string): Pro
     body: JSON.stringify({ title, description }),
   });
 }
+
+export function moveCard(id: number, columnId: number, order: number): Promise<void> {
+  return apiFetch<void>(`/cards/${id}/move`, {
+    method: "PUT",
+    body: JSON.stringify({ columnId, order }),
+  });
+}
