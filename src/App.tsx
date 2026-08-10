@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { getBoard } from "./api/boards";
+import { getBoard, updateBoard } from "./api/boards";
 import { createCard, deleteCard, updateCard } from "./api/cards";
 import { createColumn, deleteColumn } from "./api/columns";
 import type { Board } from "./types";
@@ -22,6 +22,18 @@ function App() {
     if (!connecte) return;
     chargerBoard();
   }, [connecte]);
+
+  async function renommerBoard() {
+    if (!board) return;
+    const nouveau = prompt("Nom du tableau :", board.name);
+    if (nouveau === null || nouveau.trim() === "") return;
+    try {
+      await updateBoard(board.id, nouveau.trim());
+      chargerBoard();
+    } catch (e) {
+      setErreur(e instanceof Error ? e.message : "Erreur inconnue");
+    }
+  }
 
   async function ajouterCarte(columnId: number) {
     const titre = nouveauTitre[columnId]?.trim();
@@ -77,7 +89,13 @@ function App() {
             Gemboard
           </span>
           <span className="text-white/20">/</span>
-          <h1 className="font-display text-xl font-bold tracking-tight">{board.name}</h1>
+          <h1
+            onClick={renommerBoard}
+            className="font-display text-xl font-bold tracking-tight cursor-pointer hover:text-zinc-300 transition"
+            title="Cliquer pour renommer"
+          >
+            {board.name}
+          </h1>
         </div>
         <button
           onClick={deconnexion}
