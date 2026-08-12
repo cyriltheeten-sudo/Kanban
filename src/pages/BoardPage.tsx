@@ -1,13 +1,16 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { getBoard, updateBoard } from "../api/boards";
-import { createCard, deleteCard, updateCard } from "../api/cards";
+import { setConnectionId } from "../api/realtime";
+import { createCard, deleteCard, updateCard, moveCard } from "../api/cards";
 import { createColumn, deleteColumn } from "../api/columns";
 import type { Board, Card } from "../types";
 import ColumnView from "../components/ColumnView";
 import { arrayMove } from "@dnd-kit/sortable";
 import { DndContext, PointerSensor, useSensor, useSensors, closestCorners, DragOverlay } from "@dnd-kit/core";
 import type { DragStartEvent, DragEndEvent } from "@dnd-kit/core";
-import { moveCard } from "../api/cards";
+import * as signalR from "@microsoft/signalr";
+
+
 
 const GEMS = ["#10b981", "#f59e0b", "#e11d48"]; // émeraude, topaze, rubis
 
@@ -16,6 +19,7 @@ interface BoardPageProps {
 }
 
 export default function BoardPage({ onLogout }: BoardPageProps) {
+    const connectionRef = useRef<signalR.HubConnection | null>(null);
     const [board, setBoard] = useState<Board | null>(null);
     const [error, setError] = useState<string | null>(null);
     const [newCardTitles, setNewCardTitles] = useState<Record<number, string>>({});
@@ -35,6 +39,38 @@ export default function BoardPage({ onLogout }: BoardPageProps) {
     useEffect(() => {
         loadBoard();
     }, []);
+
+    useEffect(() => {
+        if (!board) return;
+
+        const connection = new signalR.HubConnectionBuilder()
+            .withUrl("https://localhost:7007/hubs/kanban")
+            .withAutomaticReconnect()
+            .build();
+
+        connectionRef.current = connection;
+
+        connection.on("BoardChanged", () => {
+            loadBoard();
+        });
+
+        // le connectionId change après une reconnexion → on le remet à jour
+        connection.onreconnected((id) => setConnectionId(id ?? null));
+
+        connection
+            .start()
+            .then(() => {
+                console.log("SignalR connecté ✅");
+                setConnectionId(connection.connectionId);
+                return connection.invoke("JoinBoard", board.id);
+            })
+            .catch((err) => console.error("SignalR erreur :", err));
+
+        return () => {
+            setConnectionId(null);
+            connection.stop();
+        };
+    }, [board?.id]);
 
     async function handleAddCard(columnId: number) {
         const title = newCardTitles[columnId]?.trim();
@@ -163,6 +199,15 @@ export default function BoardPage({ onLogout }: BoardPageProps) {
                 target.cards.splice(finalIndex, 0, moved);
                 return { ...prev, columns };
             });
+        }
+
+        // ── Persistance : on envoie le déplacement à l'API ──
+        // C'est CE que déclenche la diffusion SignalR côté serveur.
+        try {
+            await moveCard(activeCardId, targetColumn.id, finalIndex);
+        } catch (e) {
+            setError(e instanceof Error ? e.message : "Erreur inconnue");
+            loadBoard(); // en cas d'échec, on resynchronise avec la vérité du serveur
         }
     }
 
