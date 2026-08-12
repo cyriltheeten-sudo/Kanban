@@ -1,4 +1,5 @@
 import { useDroppable } from "@dnd-kit/core";
+import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import type { Column } from "../types";
 import CardView from "./CardView";
 
@@ -23,7 +24,7 @@ export default function ColumnView({
     onEditCard,
     onDeleteCard,
 }: ColumnViewProps) {
-    const { setNodeRef, isOver } = useDroppable({ id: column.id });
+    const { setNodeRef, isOver } = useDroppable({ id: `column-${column.id}` });
     return (
         <div
             ref={setNodeRef}
@@ -49,17 +50,16 @@ export default function ColumnView({
             </div>
 
             {/* Cartes */}
-            <div className="flex flex-col gap-2">
-                {column.cards.map((card) => (
-                    <CardView
-                        key={card.id}
-                        card={card}
-                        gem={gem}
-                        onEdit={onEditCard}
-                        onDelete={onDeleteCard}
-                    />
-                ))}
-            </div>
+            <SortableContext
+                items={column.cards.map((c) => `card-${c.id}`)}
+                strategy={verticalListSortingStrategy}
+            >
+                <div className="flex flex-col gap-2 min-h-[120px]">
+                    {column.cards.map((card) => (
+                        <CardView key={card.id} card={card} gem={gem} onEdit={onEditCard} onDelete={onDeleteCard} />
+                    ))}
+                </div>
+            </SortableContext>
 
             {/* Ajout de carte */}
             <input

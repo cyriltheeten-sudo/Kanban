@@ -1,4 +1,5 @@
-import { useDraggable } from "@dnd-kit/core";
+import { useSortable } from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 import type { Card } from "../types";
 
 interface CardViewProps {
@@ -9,13 +10,13 @@ interface CardViewProps {
 }
 
 export default function CardView({ card, gem, onEdit, onDelete }: CardViewProps) {
-    const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
-        id: card.id,
-    });
+    const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
+        useSortable({ id: `card-${card.id}` });
 
     const style = {
         ["--gem"]: gem,
-        transform: transform ? `translate(${transform.x}px, ${transform.y}px)` : undefined,
+        transform: CSS.Transform.toString(transform),
+        transition,
         opacity: isDragging ? 0.4 : 1,
     } as React.CSSProperties;
 
@@ -26,7 +27,6 @@ export default function CardView({ card, gem, onEdit, onDelete }: CardViewProps)
             className="gem-card group rounded-xl px-3 py-2.5 cursor-grab active:cursor-grabbing"
         >
             <div className="flex items-start justify-between gap-2">
-                {/* la zone "poignée" : c'est le titre qu'on attrape pour glisser */}
                 <p {...listeners} {...attributes} className="text-sm text-zinc-100 leading-snug flex-1">
                     {card.title}
                 </p>

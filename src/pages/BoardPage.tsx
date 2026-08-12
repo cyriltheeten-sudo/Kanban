@@ -2,10 +2,11 @@ import { useEffect, useState } from "react";
 import { getBoard, updateBoard } from "../api/boards";
 import { createCard, deleteCard, updateCard } from "../api/cards";
 import { createColumn, deleteColumn } from "../api/columns";
-import type { Board } from "../types";
+import type { Board, Card } from "../types";
 import ColumnView from "../components/ColumnView";
-import { DndContext, PointerSensor, useSensor, useSensors } from "@dnd-kit/core";
-import type { DragEndEvent } from "@dnd-kit/core";
+import { arrayMove } from "@dnd-kit/sortable";
+import { DndContext, PointerSensor, useSensor, useSensors, closestCorners, DragOverlay } from "@dnd-kit/core";
+import type { DragStartEvent, DragEndEvent } from "@dnd-kit/core";
 import { moveCard } from "../api/cards";
 
 const GEMS = ["#10b981", "#f59e0b", "#e11d48"]; // émeraude, topaze, rubis
@@ -19,11 +20,12 @@ export default function BoardPage({ onLogout }: BoardPageProps) {
     const [error, setError] = useState<string | null>(null);
     const [newCardTitles, setNewCardTitles] = useState<Record<number, string>>({});
     const [newColumnTitle, setNewColumnTitle] = useState("");
+    const [activeCard, setActiveCard] = useState<Card | null>(null);
 
     // Capteur : on n'attrape une carte qu'après un petit mouvement de 6px
     // (sinon un simple clic sur ✎/✕ déclencherait un drag)
     const sensors = useSensors(
-        useSensor(PointerSensor, { activationConstraint: { distance: 2 } })
+        useSensor(PointerSensor, { activationConstraint: { distance: 6 } })
     );
 
     function loadBoard() {
@@ -82,31 +84,87 @@ export default function BoardPage({ onLogout }: BoardPageProps) {
         setNewCardTitles((prev) => ({ ...prev, [columnId]: value }));
     }
 
-    async function handleDragEnd(event: DragEndEvent) {
-        const { active, over } = event;
-        if (!over) return; // lâché dans le vide    
-        const cardId = Number(active.id);
-        const targetColumnId = Number(over.id);
-        // la carte qu'on déplace (pour connaître sa colonne d'origine)
-        const sourceColumn = board?.columns.find((col) =>
-            col.cards.some((c) => c.id === cardId)
-        );
-        if (!sourceColumn) return;
-        // si on lâche dans la même colonne, on ne fait rien pour l'instant
-        // (le réordonnancement fin viendra ensuite)
-        if (sourceColumn.id === targetColumnId) return;
-        // on place la carte à la fin de la colonne cible
-        const targetColumn = board?.columns.find((col) => col.id === targetColumnId);
-        const newOrder = targetColumn ? targetColumn.cards.length : 0;
-        try {
-            await moveCard(cardId, targetColumnId, newOrder);
-            loadBoard();
-        } catch (e) {
-            setError(e instanceof Error ? e.message : "Erreur inconnue");
+    function findCard(cardId: number) {
+        for (const col of board?.columns ?? []) {
+            const card = col.cards.find((c) => c.id === cardId);
+            if (card) return { card, column: col };
         }
+        return null;
     }
 
+    function parseId(raw: string | number) {
+        const s = String(raw);
+        if (s.startsWith("card-")) return { type: "card" as const, id: Number(s.slice(5)) };
+        if (s.startsWith("column-")) return { type: "column" as const, id: Number(s.slice(7)) };
+        return null;
+    }
 
+    function handleDragStart(event: DragStartEvent) {
+        const info = parseId(event.active.id);
+        if (!info || info.type !== "card") return;
+        const found = findCard(info.id);
+        setActiveCard(found?.card ?? null);
+    }
+
+    async function handleDragEnd(event: DragEndEvent) {
+        setActiveCard(null);
+        const { active, over } = event;
+        if (!over || !board) return;
+
+        const activeInfo = parseId(active.id);
+        const overInfo = parseId(over.id);
+        if (!activeInfo || activeInfo.type !== "card" || !overInfo) return;
+
+        const activeCardId = activeInfo.id;
+        const from = findCard(activeCardId);
+        if (!from) return;
+
+        // Colonne cible + position visée, selon qu'on lâche sur une colonne ou une carte
+        let targetColumn;
+        let overIndex: number;
+        if (overInfo.type === "column") {
+            targetColumn = board.columns.find((c) => c.id === overInfo.id);
+            overIndex = targetColumn ? targetColumn.cards.length : 0;
+        } else {
+            const overCard = findCard(overInfo.id);
+            targetColumn = overCard?.column;
+            overIndex = targetColumn ? targetColumn.cards.findIndex((c) => c.id === overInfo.id) : 0;
+        }
+        if (!targetColumn) return;
+
+        const sameColumn = from.column.id === targetColumn.id;
+        const oldIndex = from.column.cards.findIndex((c) => c.id === activeCardId);
+
+        let finalIndex: number;
+
+        if (sameColumn) {
+            // Réordonnancement dans la colonne : arrayMove gère le décalage tout seul
+            finalIndex = overIndex;
+            if (oldIndex === finalIndex) return; // rien ne change
+
+            setBoard((prev) => {
+                if (!prev) return prev;
+                const columns = prev.columns.map((col) => ({ ...col, cards: [...col.cards] }));
+                const col = columns.find((c) => c.id === targetColumn!.id)!;
+                col.cards = arrayMove(col.cards, oldIndex, finalIndex);
+                return { ...prev, columns };
+            });
+        } else {
+            // Déplacement vers une autre colonne : insertion à la position visée
+            finalIndex = overIndex;
+
+            setBoard((prev) => {
+                if (!prev) return prev;
+                const columns = prev.columns.map((col) => ({ ...col, cards: [...col.cards] }));
+                const source = columns.find((c) => c.cards.some((cc) => cc.id === activeCardId))!;
+                const target = columns.find((c) => c.id === targetColumn!.id)!;
+                const idx = source.cards.findIndex((c) => c.id === activeCardId);
+                const [moved] = source.cards.splice(idx, 1);
+                target.cards.splice(finalIndex, 0, moved);
+                return { ...prev, columns };
+            });
+        }
+    }
 
     if (error) return <p className="min-h-screen bg-[#0a0a0f] text-red-400 p-6">Erreur : {error}</p>;
     if (!board) return <p className="min-h-screen bg-[#0a0a0f] text-zinc-400 p-6">Chargement…</p>;
@@ -131,8 +189,13 @@ export default function BoardPage({ onLogout }: BoardPageProps) {
                     Déconnexion
                 </button>
             </header>
-            <DndContext sensors={sensors} onDragEnd={handleDragEnd}>
-                <div className="scroll-kanban flex gap-4 overflow-x-auto px-6 py-6 items-start">
+            <DndContext
+                sensors={sensors}
+                collisionDetection={closestCorners}
+                onDragStart={handleDragStart}
+                onDragEnd={handleDragEnd}
+            >
+                <div className="scroll-kanban flex gap-4 overflow-x-auto px-6 py-6 items-start select-none">
                     {board.columns.map((col, index) => (
                         <ColumnView
                             key={col.id}
@@ -158,6 +221,14 @@ export default function BoardPage({ onLogout }: BoardPageProps) {
                         />
                     </div>
                 </div>
+                <DragOverlay>
+                    {activeCard ? (
+                        <div className="gem-card rounded-xl px-3 py-2.5 w-72 shadow-2xl"
+                            style={{ ["--gem"]: "#10b981" } as React.CSSProperties}>
+                            <p className="text-sm text-zinc-100">{activeCard.title}</p>
+                        </div>
+                    ) : null}
+                </DragOverlay>
             </DndContext>
         </div>
     );
