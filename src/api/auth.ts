@@ -1,4 +1,4 @@
-const API = "https://localhost:7007/api";
+const API = `${import.meta.env.VITE_API_URL}/api`;
 
 export interface LoginResponse {
   token: string;

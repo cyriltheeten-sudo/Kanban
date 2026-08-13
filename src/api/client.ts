@@ -1,6 +1,6 @@
 import { getConnectionId } from "./realtime";
 
-const API = "https://localhost:7007/api";
+const API = `${import.meta.env.VITE_API_URL}/api`;
 
 export async function apiFetch<T>(
   endpoint: string,
@@ -18,7 +18,7 @@ export async function apiFetch<T>(
       ...options.headers,
     },
   });
-  
+
   if (reponse.status === 401) {
       localStorage.removeItem("token");
       window.location.reload(); // l'app se relance : plus de token → page de connexion

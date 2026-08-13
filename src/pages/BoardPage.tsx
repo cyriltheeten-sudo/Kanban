@@ -44,7 +44,7 @@ export default function BoardPage({ onLogout }: BoardPageProps) {
         if (!board) return;
 
         const connection = new signalR.HubConnectionBuilder()
-            .withUrl("https://localhost:7007/hubs/kanban")
+            .withUrl(`${import.meta.env.VITE_API_URL}/hubs/kanban`)
             .withAutomaticReconnect()
             .build();
 
