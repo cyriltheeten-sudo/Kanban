@@ -18,7 +18,12 @@ export async function apiFetch<T>(
       ...options.headers,
     },
   });
-
+  
+  if (reponse.status === 401) {
+      localStorage.removeItem("token");
+      window.location.reload(); // l'app se relance : plus de token → page de connexion
+      throw new Error("Session expirée");
+  }
   if (!reponse.ok) throw new Error(`Erreur HTTP : ${reponse.status}`);
   if (reponse.status === 204) return undefined as T;
 
