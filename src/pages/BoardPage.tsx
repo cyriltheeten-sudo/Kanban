@@ -15,10 +15,12 @@ import * as signalR from "@microsoft/signalr";
 const GEMS = ["#10b981", "#f59e0b", "#e11d48"]; // émeraude, topaze, rubis
 
 interface BoardPageProps {
+    boardId: number;
     onLogout: () => void;
+    onBack: () => void;
 }
 
-export default function BoardPage({ onLogout }: BoardPageProps) {
+export default function BoardPage({ boardId, onLogout, onBack }: BoardPageProps) {
     const connectionRef = useRef<signalR.HubConnection | null>(null);
     const [board, setBoard] = useState<Board | null>(null);
     const [error, setError] = useState<string | null>(null);
@@ -33,12 +35,12 @@ export default function BoardPage({ onLogout }: BoardPageProps) {
     );
 
     function loadBoard() {
-        getBoard(1).then(setBoard).catch((e) => setError(e.message));
+        getBoard(boardId).then(setBoard).catch((e) => setError(e.message));
     }
 
     useEffect(() => {
         loadBoard();
-    }, []);
+    }, [boardId]);
 
     useEffect(() => {
         if (!board) return;
@@ -217,6 +219,9 @@ export default function BoardPage({ onLogout }: BoardPageProps) {
     return (
         <div className="min-h-screen bg-[#0a0a0f] text-zinc-100">
             <header className="flex items-center justify-between px-6 py-5 border-b border-white/5">
+                <button onClick={onBack} className="text-sm text-zinc-400 hover:text-zinc-100 transition">
+                    ← Mes projets
+                </button>
                 <div className="flex items-center gap-3">
                     <span className="font-display text-sm font-bold tracking-widest text-emerald-400/80 uppercase">
                         Gemboard
@@ -240,6 +245,7 @@ export default function BoardPage({ onLogout }: BoardPageProps) {
                 onDragStart={handleDragStart}
                 onDragEnd={handleDragEnd}
             >
+
                 <div className="scroll-kanban flex gap-4 overflow-x-auto px-6 py-6 items-start select-none">
                     {board.columns.map((col, index) => (
                         <ColumnView
