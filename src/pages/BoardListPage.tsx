@@ -32,6 +32,9 @@ export default function BoardListPage({ onSelectBoard, onLogout }: BoardListPage
         }
     }
 
+    if (error) return <p className="min-h-screen bg-[#0a0a0f] text-red-400 p-6">Erreur : {error}</p>;
+    if (!boards.length) return <p className="min-h-screen bg-[#0a0a0f] text-zinc-400 p-6">Aucun projet disponible.</p>;
+
     return (
         <div className="min-h-screen bg-[#0a0a0f] text-zinc-100 p-6">
             <header className="flex justify-between mb-6">
