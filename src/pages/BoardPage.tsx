@@ -8,7 +8,7 @@ import { useBoard } from "../hooks/useBoard";
 import { useBoardRealTime } from "../hooks/useBoardRealTime";
 import { useDragAndDrop } from "../hooks/useDragAndDrop";
 
-const GEMS = ["#10b981", "#f59e0b", "#e11d48"]; // émeraude, topaze, rubis
+const GEMS = ["#10b981", "#f59e0b", "#e11d48"];
 
 interface BoardPageProps {
     boardId: number;
@@ -72,7 +72,11 @@ export default function BoardPage({ boardId, onLogout, onBack }: BoardPageProps)
     }
 
     if (error) return <p className="min-h-screen bg-[#0a0a0f] text-red-400 p-6">Erreur : {error}</p>;
-    if (!board) return <p className="min-h-screen bg-[#0a0a0f] text-zinc-400 p-6">Chargement…</p>;
+    if (!board) return (
+        <p className="min-h-screen bg-[#0a0a0f] text-zinc-400 p-6">
+            Chargement… <span className="text-zinc-600">(le serveur peut mettre jusqu'à 30 s à se réveiller)</span>
+        </p>
+    );
 
     return (
         <div className="min-h-screen bg-[#0a0a0f] text-zinc-100">
@@ -119,14 +123,13 @@ export default function BoardPage({ boardId, onLogout, onBack }: BoardPageProps)
                         />
                     ))}
 
-                    {/* Ajouter une colonne */}
-                    <div className="w-72 flex-shrink-0">
+                    <div className="w-72 shrink-0">
                         <input
                             value={newColumnTitle}
                             onChange={(e) => setNewColumnTitle(e.target.value)}
                             onKeyDown={(e) => e.key === "Enter" && handleAddColumn()}
                             placeholder="+ Nouvelle colonne"
-                            className="w-full rounded-xl bg-white/[0.03] border border-dashed border-white/10 px-3 py-2.5 text-sm placeholder:text-zinc-600 outline-none focus-visible:border-white/25 transition"
+                            className="w-full rounded-xl bg-white/3 border border-dashed border-white/10 px-3 py-2.5 text-sm placeholder:text-zinc-600 outline-none focus-visible:border-white/25 transition"
                         />
                     </div>
                 </div>

@@ -12,7 +12,7 @@ export default function Login({ onLogin }: LoginProps) {
   const [chargement, setChargement] = useState(false);
 
   async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();               // empêche le rechargement de la page
+    e.preventDefault();
     setChargement(true);
     setErreur(null);
     try {
@@ -42,7 +42,7 @@ export default function Login({ onLogin }: LoginProps) {
         {/* Formulaire */}
         <form
           onSubmit={handleSubmit}
-          className="bg-white/[0.03] border border-white/10 rounded-2xl p-6 flex flex-col gap-4"
+          className="bg-white/3 border border-white/10 rounded-2xl p-6 flex flex-col gap-4"
         >
           <div className="flex flex-col gap-1.5">
             <label htmlFor="email" className="text-xs text-zinc-400">Email</label>
@@ -79,7 +79,7 @@ export default function Login({ onLogin }: LoginProps) {
             disabled={chargement}
             className="mt-2 rounded-lg bg-emerald-500/90 hover:bg-emerald-500 text-black font-medium py-2.5 transition disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {chargement ? "Connexion…" : "Se connecter"}
+            {chargement ? "Connexion… (réveil du serveur possible, ~30 s)" : "Se connecter"}
           </button>
         </form>
       </div>

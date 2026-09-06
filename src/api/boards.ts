@@ -16,9 +16,9 @@ export function updateBoard(id: number, name: string): Promise<void> {
   });
 }
 
-export function createBoard(name: string): Promise<Board> {
+export function createBoard(name: string, templateId: number | null): Promise<Board> {
     return apiFetch<Board>("/boards", {
         method: "POST",
-        body: JSON.stringify({ name }),
+        body: JSON.stringify({ name, templateId }),
     });
 }

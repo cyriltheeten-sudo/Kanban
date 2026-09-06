@@ -17,3 +17,10 @@ export interface Board {
   name: string;
   columns: Column[];
 }
+
+export interface Template {
+  id: number;
+  name: string;
+  columns: Column[];
+  ownerId: number;
+}

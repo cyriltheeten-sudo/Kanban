@@ -28,8 +28,8 @@ export default function ColumnView({
     return (
         <div
             ref={setNodeRef}
-            className={`w-72 flex-shrink-0 rounded-2xl border p-3 transition
-        ${isOver ? "bg-white/[0.06] border-white/20" : "bg-white/[0.02] border-white/5"}`}
+            className={`w-72 shrink-0 rounded-2xl border p-3 transition
+        ${isOver ? "bg-white/6 border-white/20" : "bg-white/2 border-white/5"}`}
         >
             {/* En-tête de colonne */}
             <div className="flex items-center gap-2 px-1 pb-3">
@@ -54,7 +54,7 @@ export default function ColumnView({
                 items={column.cards.map((c) => `card-${c.id}`)}
                 strategy={verticalListSortingStrategy}
             >
-                <div className="flex flex-col gap-2 min-h-[120px]">
+                <div className="flex flex-col gap-2 min-h-30">
                     {column.cards.map((card) => (
                         <CardView key={card.id} card={card} gem={gem} onEdit={onEditCard} onDelete={onDeleteCard} />
                     ))}
