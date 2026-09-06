@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { getBoards, createBoard } from "../api/boards";
+import { getBoards, createBoard, deleteBoard } from "../api/boards";
 import type { Board, Template } from "../types";
 import { getTemplates } from "../api/template";
 
@@ -39,6 +39,16 @@ export default function BoardListPage({ onSelectBoard, onLogout }: BoardListPage
             const newBoard = await createBoard(name, selectedTemplateId);
             setNewName("");
             setBoards((prev) => [...prev, newBoard]);
+        } catch (e) {
+            setError(e instanceof Error ? e.message : "Erreur inconnue");
+        }
+    }
+
+    async function handleDelete(id: number) {
+        if (!confirm("Supprimer ce projet et toutes ses cartes ?")) return;
+        try {
+            await deleteBoard(id);
+            setBoards((prev) => prev.filter((b) => b.id !== id));
         } catch (e) {
             setError(e instanceof Error ? e.message : "Erreur inconnue");
         }
@@ -93,6 +103,15 @@ export default function BoardListPage({ onSelectBoard, onLogout }: BoardListPage
                             onClick={() => onSelectBoard(board.id)}
                         >
                             <h2 className="font-bold text-lg">{board.name}</h2>
+                            <button
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleDelete(board.id);
+                                }}
+                                className="mt-2 text-xs text-red-400 hover:text-red-300 transition"
+                            >
+                                Supprimer
+                            </button>
                         </div>
                     ))
                 )}

@@ -22,3 +22,9 @@ export function createBoard(name: string, templateId: number | null): Promise<Bo
         body: JSON.stringify({ name, templateId }),
     });
 }
+
+export function deleteBoard(id: number): Promise<void> {
+    return apiFetch<void>(`/boards/${id}`, {
+        method: "DELETE",
+    });
+}
