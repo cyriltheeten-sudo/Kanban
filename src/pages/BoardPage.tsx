@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { updateBoard } from "../api/boards";
 import { createCard, deleteCard, updateCard } from "../api/cards";
 import { createColumn, deleteColumn } from "../api/columns";
@@ -25,11 +25,19 @@ interface BoardPageProps {
 }
 
 export default function BoardPage({ boardId, onLogout, onBack }: BoardPageProps) {
-    const { board, setBoard, error, setError, loadBoard } = useBoard(boardId);
-    useBoardRealTime(board, loadBoard);
-    const { sensors, activeCard, handleDragStart, handleDragEnd } = useDragAndDrop(board, setBoard, loadBoard, setError);
+    const { board, setBoard, error, loadBoard } = useBoard(boardId);
+    const [actionError, setActionError] = useState<string | null>(null);
+    useBoardRealTime(boardId, loadBoard);
+    const { sensors, activeCard, handleDragStart, handleDragEnd } =
+        useDragAndDrop(board, setBoard, loadBoard, setActionError);
     const [newCardTitles, setNewCardTitles] = useState<Record<number, string>>({});
     const [newColumnTitle, setNewColumnTitle] = useState("");
+
+    useEffect(() => {
+        if (!actionError) return;
+        const t = setTimeout(() => setActionError(null), 4000);
+        return () => clearTimeout(t);
+    }, [actionError]);
 
     async function handleAddCard(columnId: number) {
         const title = newCardTitles[columnId]?.trim();
@@ -39,32 +47,32 @@ export default function BoardPage({ boardId, onLogout, onBack }: BoardPageProps)
             setNewCardTitles((prev) => ({ ...prev, [columnId]: "" }));
             loadBoard();
         } catch (e) {
-            setError(e instanceof Error ? e.message : "Erreur inconnue");
+            setActionError(e instanceof Error ? e.message : "Erreur inconnue");
         }
     }
 
     async function handleDeleteCard(id: number) {
         try { await deleteCard(id); loadBoard(); }
-        catch (e) { setError(e instanceof Error ? e.message : "Erreur inconnue"); }
+        catch (e) { setActionError(e instanceof Error ? e.message : "Erreur inconnue"); }
     }
 
     async function handleEditCard(id: number, currentTitle: string) {
         const next = prompt("Nouveau titre :", currentTitle);
         if (next === null || next.trim() === "") return;
         try { await updateCard(id, next.trim()); loadBoard(); }
-        catch (e) { setError(e instanceof Error ? e.message : "Erreur inconnue"); }
+        catch (e) { setActionError(e instanceof Error ? e.message : "Erreur inconnue"); }
     }
 
     async function handleAddColumn() {
         const title = newColumnTitle.trim();
         if (!title || !board) return;
         try { await createColumn(title, board.id); setNewColumnTitle(""); loadBoard(); }
-        catch (e) { setError(e instanceof Error ? e.message : "Erreur inconnue"); }
+        catch (e) { setActionError(e instanceof Error ? e.message : "Erreur inconnue"); }
     }
 
     async function handleDeleteColumn(id: number) {
         try { await deleteColumn(id); loadBoard(); }
-        catch (e) { setError(e instanceof Error ? e.message : "Erreur inconnue"); }
+        catch (e) { setActionError(e instanceof Error ? e.message : "Erreur inconnue"); }
     }
 
     async function handleRenameBoard() {
@@ -72,7 +80,7 @@ export default function BoardPage({ boardId, onLogout, onBack }: BoardPageProps)
         const next = prompt("Nom du tableau :", board.name);
         if (next === null || next.trim() === "") return;
         try { await updateBoard(board.id, next.trim()); loadBoard(); }
-        catch (e) { setError(e instanceof Error ? e.message : "Erreur inconnue"); }
+        catch (e) { setActionError(e instanceof Error ? e.message : "Erreur inconnue"); }
     }
 
     function handleNewCardTitleChange(columnId: number, value: string) {
@@ -86,6 +94,7 @@ export default function BoardPage({ boardId, onLogout, onBack }: BoardPageProps)
             </div>
         );
     }
+
 
     if (!board) {
         return (
@@ -134,7 +143,11 @@ export default function BoardPage({ boardId, onLogout, onBack }: BoardPageProps)
             </header>
 
             <main className="relative z-10 flex-1 min-h-0 flex flex-col w-full overflow-hidden pt-4 animate-[smoothSlideDown_0.45s_cubic-bezier(0.22,1,0.36,1)_forwards] will-change-[opacity,transform]">
-
+                {actionError && (
+                    <div className="fixed bottom-4 right-4 z-50 max-w-sm rounded-xl bg-surface border border-red-500/30 px-4 py-3 text-sm text-red-400 shadow-2xl">
+                        {actionError}
+                    </div>
+                )}
                 <div className="shrink-0 px-4 sm:px-6 pb-3">
                     <input
                         value={newColumnTitle}
