@@ -1,12 +1,12 @@
 import { useState } from "react";
 import { login } from "../api/auth";
 import "../styles/animations.css";
+import { useNavigate } from "react-router";
 
-interface LoginProps {
-  onLogin: () => void;
-}
 
-export default function Login({ onLogin }: LoginProps) {
+
+export default function Login() {
+  const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [erreur, setErreur] = useState<string | null>(null);
@@ -19,7 +19,7 @@ export default function Login({ onLogin }: LoginProps) {
     try {
       const data = await login(email, password);
       localStorage.setItem("token", data.token);
-      onLogin();
+      navigate("/");
     } catch (err) {
       setErreur(err instanceof Error ? err.message : "Une erreur est survenue");
     } finally {

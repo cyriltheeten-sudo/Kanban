@@ -7,6 +7,7 @@ import { DndContext, closestCorners, DragOverlay } from "@dnd-kit/core";
 import { useBoard } from "../hooks/useBoard";
 import { useBoardRealTime } from "../hooks/useBoardRealTime";
 import { useDragAndDrop } from "../hooks/useDragAndDrop";
+import { useParams, useNavigate } from "react-router";
 
 const GEMS = [
     "var(--color-gem-1)",
@@ -18,16 +19,13 @@ const GEMS = [
     "var(--color-gem-7)",
 ];
 
-interface BoardPageProps {
-    boardId: number;
-    onLogout: () => void;
-    onBack: () => void;
-}
-
-export default function BoardPage({ boardId, onLogout, onBack }: BoardPageProps) {
-    const { board, setBoard, error, loadBoard } = useBoard(boardId);
+export default function BoardPage() {
+    const navigate = useNavigate();
+    const { boardId } = useParams();
+    const id = Number(boardId);
+    const { board, setBoard, error, loadBoard } = useBoard(id);
     const [actionError, setActionError] = useState<string | null>(null);
-    useBoardRealTime(boardId, loadBoard);
+    useBoardRealTime(id, loadBoard);
     const { sensors, activeCard, handleDragStart, handleDragEnd } =
         useDragAndDrop(board, setBoard, loadBoard, setActionError);
     const [newCardTitles, setNewCardTitles] = useState<Record<number, string>>({});
@@ -111,7 +109,7 @@ export default function BoardPage({ boardId, onLogout, onBack }: BoardPageProps)
 
             <header className="relative z-10 shrink-0 w-full flex items-center justify-between px-4 sm:px-6 py-3 bg-surface">
                 <button
-                    onClick={onBack}
+                    onClick={() => navigate("/")}
                     className="text-[10px] sm:text-xs px-3 py-1.5 rounded-xl text-muted hover:text-ink bg-raised hover:bg-btn-hover transition-colors duration-200 active:scale-[0.98] flex items-center gap-1.5"
                 >
                     ← Mes tableaux
@@ -135,7 +133,10 @@ export default function BoardPage({ boardId, onLogout, onBack }: BoardPageProps)
                 </div>
 
                 <button
-                    onClick={onLogout}
+                    onClick={() => {
+                        localStorage.removeItem("token");
+                        navigate("/login");
+                    }}
                     className="text-[10px] sm:text-xs px-3 py-1.5 rounded-xl text-muted hover:text-ink bg-raised hover:bg-btn-hover transition-colors duration-200 active:scale-[0.98]"
                 >
                     Déconnexion

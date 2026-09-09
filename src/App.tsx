@@ -1,35 +1,22 @@
-import { useState } from "react";
+import { Routes, Route, Navigate } from "react-router";
+import type { ReactNode } from "react";
 import Login from "./pages/Login";
-import BoardPage from "./pages/BoardPage";
 import BoardListPage from "./pages/BoardListPage";
+import BoardPage from "./pages/BoardPage";
+
+function RequireAuth({ children }: { children: ReactNode }) {
+  const isAuth = !!localStorage.getItem("token");
+  return isAuth ? children : <Navigate to="/login" replace />;
+}
 
 function App() {
-  const [connected, setConnected] = useState<boolean>(!!localStorage.getItem("token"));
-  const [selectedBoardId, setSelectedBoardId] = useState<number | null>(null);
-
-  function handleLogout() {
-    localStorage.removeItem("token");
-    setConnected(false);
-    setSelectedBoardId(null);
-  }
-
-  if (!connected) return <Login onLogin={() => setConnected(true)} />;
-
-  if (selectedBoardId !== null) {
-    return (
-      <BoardPage
-        boardId={selectedBoardId}
-        onLogout={handleLogout}
-        onBack={() => setSelectedBoardId(null)}
-      />
-    );
-  }
-
   return (
-    <BoardListPage
-      onSelectBoard={setSelectedBoardId}
-      onLogout={handleLogout}
-    />
+    <Routes>
+      <Route path="/login" element={<Login />} />
+      <Route path="/" element={<RequireAuth><BoardListPage /></RequireAuth>} />
+      <Route path="/board/:boardId" element={<RequireAuth><BoardPage /></RequireAuth>} />
+      <Route path="*" element={<Navigate to="/" replace />} />
+    </Routes>
   );
 }
 

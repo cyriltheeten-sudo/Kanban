@@ -2,13 +2,11 @@ import { useState, useEffect, useRef } from "react";
 import { getBoards, createBoard, deleteBoard } from "../api/boards";
 import type { Board, Template } from "../types";
 import { getTemplates } from "../api/template";
+import { useNavigate } from "react-router";
 
-interface BoardListPageProps {
-    onSelectBoard: (id: number) => void;
-    onLogout: () => void;
-}
 
-export default function BoardListPage({ onSelectBoard, onLogout }: BoardListPageProps) {
+export default function BoardListPage() {
+    const navigate = useNavigate();
     const [boards, setBoards] = useState<Board[]>([]);
     const [templates, setTemplates] = useState<Template[]>([]);
     const [newName, setNewName] = useState("");
@@ -117,7 +115,10 @@ export default function BoardListPage({ onSelectBoard, onLogout }: BoardListPage
                     </h1>
                 </div>
                 <button
-                    onClick={onLogout}
+                    onClick={() => {
+                        localStorage.removeItem("token");
+                        navigate("/login");
+                    }}
                     className="px-4 py-2 rounded-xl text-xs font-semibold text-muted hover:text-ink bg-raised hover:bg-btn-hover transition-colors duration-200 active:scale-95"
                 >
                     Déconnexion
@@ -201,7 +202,7 @@ export default function BoardListPage({ onSelectBoard, onLogout }: BoardListPage
                             {boards.map((board) => (
                                 <div
                                     key={board.id}
-                                    onClick={() => onSelectBoard(board.id)}
+                                    onClick={() => navigate(`/board/${board.id}`)}
                                     className="group relative rounded-2xl bg-raised border border-transparent hover:border-teal-500/30 hover:bg-raised-hover hover:-translate-y-1 hover:shadow-[0_10px_25px_-5px_rgba(20,184,166,0.15)] transition-all duration-200 cursor-pointer p-6 h-36 flex flex-col justify-between"
                                 >
                                     <div className="flex items-start justify-between gap-3">
