@@ -1,4 +1,5 @@
 import { getConnectionId } from "./realtime";
+import { redirectToLogin } from "./navigation";
 
 const API = `${import.meta.env.VITE_API_URL}/api`;
 
@@ -24,11 +25,11 @@ export async function apiFetch<T>(
     throw new Error("Connexion au serveur impossible. Vérifie ta connexion et réessaie.", { cause: e });
   }
 
-  if (reponse.status === 401) {
+if (reponse.status === 401) {
     localStorage.removeItem("token");
-    window.location.reload();
+    redirectToLogin();
     throw new Error("Session expirée");
-  }
+}
   if (!reponse.ok) {
     throw new Error("Une erreur est survenue. Réessaie dans un instant.", { cause: reponse.status });
   }

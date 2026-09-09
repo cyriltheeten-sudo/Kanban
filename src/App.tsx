@@ -1,8 +1,18 @@
-import { Routes, Route, Navigate } from "react-router";
+import { useEffect } from "react";
+import { Routes, Route, Navigate, useNavigate } from "react-router";
+import { setNavigate } from "./api/navigation";
 import type { ReactNode } from "react";
 import Login from "./pages/Login";
 import BoardListPage from "./pages/BoardListPage";
 import BoardPage from "./pages/BoardPage";
+
+function NavigationBridge() {
+  const navigate = useNavigate();
+  useEffect(() => {
+    setNavigate(navigate);
+  }, [navigate]);
+  return null;   // ne rend rien : purement technique
+}
 
 function RequireAuth({ children }: { children: ReactNode }) {
   const isAuth = !!localStorage.getItem("token");
@@ -11,12 +21,15 @@ function RequireAuth({ children }: { children: ReactNode }) {
 
 function App() {
   return (
-    <Routes>
-      <Route path="/login" element={<Login />} />
-      <Route path="/" element={<RequireAuth><BoardListPage /></RequireAuth>} />
-      <Route path="/board/:boardId" element={<RequireAuth><BoardPage /></RequireAuth>} />
-      <Route path="*" element={<Navigate to="/" replace />} />
-    </Routes>
+    <>
+      <NavigationBridge />
+      <Routes>
+        <Route path="/login" element={<Login />} />
+        <Route path="/" element={<RequireAuth><BoardListPage /></RequireAuth>} />
+        <Route path="/board/:boardId" element={<RequireAuth><BoardPage /></RequireAuth>} />
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+    </>
   );
 }
 
