@@ -13,29 +13,37 @@ export default function CardView({ card, gem, onEdit, onDelete }: CardViewProps)
     const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
         useSortable({ id: `card-${card.id}` });
 
+    const baseBg = `linear-gradient(135deg, ${gem}14 0%, #141d22 55%)`;
+    const hoverBg = `linear-gradient(135deg, ${gem}24 0%, #172228 55%)`;
+
     const style = {
-        ["--gem"]: gem,
         transform: CSS.Transform.toString(transform),
         transition,
-        opacity: isDragging ? 0.4 : 1,
+        opacity: isDragging ? 0.3 : 1,
+        background: baseBg,
+        borderLeft: `3px solid ${gem}`,
     } as React.CSSProperties;
 
     return (
         <div
             ref={setNodeRef}
             style={style}
-            className="gem-card group rounded-xl px-3 py-2.5 cursor-grab active:cursor-grabbing"
+            className="group relative rounded-xl border border-transparent p-3.5 cursor-grab active:cursor-grabbing transition-colors duration-200"
+            onMouseEnter={(e) => { e.currentTarget.style.background = hoverBg; }}
+            onMouseLeave={(e) => { e.currentTarget.style.background = baseBg; }}
         >
             <div className="flex items-start justify-between gap-2">
-                <p {...listeners} {...attributes} className="text-sm text-zinc-100 leading-snug flex-1">
+                <p {...listeners} {...attributes} className="text-sm text-[#e7eef0] font-medium leading-snug flex-1">
                     {card.title}
                 </p>
-                <div className="flex gap-1.5 opacity-0 group-hover:opacity-100 transition shrink-0">
-                    <button onClick={() => onEdit(card.id, card.title)} className="text-zinc-400 hover:text-zinc-100 text-xs">✎</button>
-                    <button onClick={() => onDelete(card.id)} className="text-zinc-400 hover:text-red-400 text-xs">✕</button>
+                <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition shrink-0">
+                    <button onClick={() => onEdit(card.id, card.title)} className="text-[#7e8d92] hover:text-[#e7eef0] text-xs px-1">✎</button>
+                    <button onClick={() => onDelete(card.id)} className="text-[#7e8d92] hover:text-red-400 text-xs px-1">✕</button>
                 </div>
             </div>
-            {card.description && <p className="mt-1 text-xs text-zinc-500">{card.description}</p>}
+            {card.description && (
+                <p className="mt-1.5 text-xs text-[#a4b1b5] leading-normal">{card.description}</p>
+            )}
         </div>
     );
 }

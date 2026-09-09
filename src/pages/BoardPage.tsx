@@ -8,7 +8,15 @@ import { useBoard } from "../hooks/useBoard";
 import { useBoardRealTime } from "../hooks/useBoardRealTime";
 import { useDragAndDrop } from "../hooks/useDragAndDrop";
 
-const GEMS = ["#10b981", "#f59e0b", "#e11d48"];
+const GEMS = [
+    "var(--color-gem-1)",
+    "var(--color-gem-2)",
+    "var(--color-gem-3)",
+    "var(--color-gem-4)",
+    "var(--color-gem-5)",
+    "var(--color-gem-6)",
+    "var(--color-gem-7)",
+];
 
 interface BoardPageProps {
     boardId: number;
@@ -71,77 +79,108 @@ export default function BoardPage({ boardId, onLogout, onBack }: BoardPageProps)
         setNewCardTitles((prev) => ({ ...prev, [columnId]: value }));
     }
 
-    if (error) return <p className="min-h-screen bg-[#0a0a0f] text-red-400 p-6">Erreur : {error}</p>;
-    if (!board) return (
-        <p className="min-h-screen bg-[#0a0a0f] text-zinc-400 p-6">
-            Chargement… <span className="text-zinc-600">(le serveur peut mettre jusqu'à 30 s à se réveiller)</span>
-        </p>
-    );
+    if (error) {
+        return (
+            <div className="relative min-h-screen w-full bg-app bg-[radial-gradient(circle_at_50%_0%,rgba(20,184,166,0.12)_0%,rgba(13,148,136,0.05)_30%,rgba(10,15,16,0)_60%)] text-ink flex items-center justify-center p-4 text-center overflow-hidden font-sans">
+                <p className="relative z-10 text-red-400 text-sm">Erreur : {error}</p>
+            </div>
+        );
+    }
+
+    if (!board) {
+        return (
+            <div className="relative min-h-screen w-full bg-app bg-[radial-gradient(circle_at_50%_0%,rgba(20,184,166,0.12)_0%,rgba(13,148,136,0.05)_30%,rgba(10,15,16,0)_60%)] text-ink flex items-center justify-center p-4 text-center overflow-hidden font-sans">
+                <p className="relative z-10 text-muted text-xs sm:text-sm animate-pulse">
+                    Chargement… <span className="text-faint block sm:inline">(le serveur peut mettre jusqu'à 30 s à se réveiller)</span>
+                </p>
+            </div>
+        );
+    }
 
     return (
-        <div className="min-h-screen bg-[#0a0a0f] text-zinc-100">
-            <header className="flex items-center justify-between px-6 py-5 border-b border-white/5">
-                <button onClick={onBack} className="text-sm text-zinc-400 hover:text-zinc-100 transition">
-                    ← Mes projets
+        <div className="relative h-screen w-full bg-app bg-[radial-gradient(circle_at_50%_0%,rgba(20,184,166,0.12)_0%,rgba(13,148,136,0.05)_30%,rgba(10,15,16,0)_60%)] text-ink flex flex-col overflow-hidden font-sans selection:bg-teal-500/20 selection:text-teal-300">
+
+            <header className="relative z-10 shrink-0 w-full flex items-center justify-between px-4 sm:px-6 py-3 bg-surface">
+                <button
+                    onClick={onBack}
+                    className="text-[10px] sm:text-xs px-3 py-1.5 rounded-xl text-muted hover:text-ink bg-raised hover:bg-btn-hover transition-colors duration-200 active:scale-[0.98] flex items-center gap-1.5"
+                >
+                    ← Mes tableaux
                 </button>
-                <div className="flex items-center gap-3">
-                    <span className="font-display text-sm font-bold tracking-widest text-emerald-400/80 uppercase">
-                        Gemboard
-                    </span>
-                    <span className="text-white/20">/</span>
-                    <h1
+
+                <div className="flex items-center gap-2 sm:gap-3">
+                    <h1 className="text-base sm:text-lg font-bold tracking-tight">
+                        <span className="bg-linear-to-r from-teal-300 to-emerald-400 bg-clip-text text-transparent">
+                            Gem
+                        </span>
+                        <span className="text-white">Board</span>
+                    </h1>
+                    <span className="text-faint">/</span>
+                    <h2
                         onClick={handleRenameBoard}
-                        className="font-display text-xl font-bold tracking-tight cursor-pointer hover:text-zinc-300 transition"
+                        className="text-sm sm:text-base font-semibold text-ink cursor-pointer hover:text-teal-300 transition-colors"
                         title="Cliquer pour renommer"
                     >
                         {board.name}
-                    </h1>
+                    </h2>
                 </div>
-                <button onClick={onLogout} className="text-sm text-zinc-400 hover:text-zinc-100 transition">
+
+                <button
+                    onClick={onLogout}
+                    className="text-[10px] sm:text-xs px-3 py-1.5 rounded-xl text-muted hover:text-ink bg-raised hover:bg-btn-hover transition-colors duration-200 active:scale-[0.98]"
+                >
                     Déconnexion
                 </button>
             </header>
-            <DndContext
-                sensors={sensors}
-                collisionDetection={closestCorners}
-                onDragStart={handleDragStart}
-                onDragEnd={handleDragEnd}
-            >
 
-                <div className="scroll-kanban flex gap-4 overflow-x-auto px-6 py-6 items-start select-none">
-                    {board.columns.map((col, index) => (
-                        <ColumnView
-                            key={col.id}
-                            column={col}
-                            gem={GEMS[index % GEMS.length]}
-                            newCardTitle={newCardTitles[col.id] ?? ""}
-                            onNewCardTitleChange={handleNewCardTitleChange}
-                            onAddCard={handleAddCard}
-                            onDeleteColumn={handleDeleteColumn}
-                            onEditCard={handleEditCard}
-                            onDeleteCard={handleDeleteCard}
-                        />
-                    ))}
+            <main className="relative z-10 flex-1 min-h-0 flex flex-col w-full overflow-hidden pt-4 animate-[smoothSlideDown_0.45s_cubic-bezier(0.22,1,0.36,1)_forwards] will-change-[opacity,transform]">
 
-                    <div className="w-72 shrink-0">
-                        <input
-                            value={newColumnTitle}
-                            onChange={(e) => setNewColumnTitle(e.target.value)}
-                            onKeyDown={(e) => e.key === "Enter" && handleAddColumn()}
-                            placeholder="+ Nouvelle colonne"
-                            className="w-full rounded-xl bg-white/3 border border-dashed border-white/10 px-3 py-2.5 text-sm placeholder:text-zinc-600 outline-none focus-visible:border-white/25 transition"
-                        />
-                    </div>
+                <div className="shrink-0 px-4 sm:px-6 pb-3">
+                    <input
+                        value={newColumnTitle}
+                        onChange={(e) => setNewColumnTitle(e.target.value)}
+                        onKeyDown={(e) => e.key === "Enter" && handleAddColumn()}
+                        placeholder="+ Nouvelle colonne"
+                        className="w-full sm:w-72 rounded-xl bg-field px-4 py-2.5 text-sm text-ink placeholder:text-placeholder outline-none transition-colors duration-200 focus-visible:ring-1 focus-visible:ring-teal-500/30 autofill:shadow-[0_0_0_30px_var(--color-field)_inset] autofill:[-webkit-text-fill-color:var(--color-ink)] autofill:caret-white"
+                    />
                 </div>
-                <DragOverlay>
-                    {activeCard ? (
-                        <div className="gem-card rounded-xl px-3 py-2.5 w-72 shadow-2xl"
-                            style={{ ["--gem"]: "#10b981" } as React.CSSProperties}>
-                            <p className="text-sm text-zinc-100">{activeCard.title}</p>
-                        </div>
-                    ) : null}
-                </DragOverlay>
-            </DndContext>
+
+                <DndContext
+                    sensors={sensors}
+                    collisionDetection={closestCorners}
+                    onDragStart={handleDragStart}
+                    onDragEnd={handleDragEnd}
+                >
+                    <div className="scroll-kanban flex gap-3 overflow-x-auto px-4 sm:px-6 pb-4 items-stretch select-none flex-1 min-h-0">
+                        {board.columns.map((col, index) => (
+                            <ColumnView
+                                key={col.id}
+                                column={col}
+                                gem={GEMS[index % GEMS.length]}
+                                newCardTitle={newCardTitles[col.id] ?? ""}
+                                onNewCardTitleChange={handleNewCardTitleChange}
+                                onAddCard={handleAddCard}
+                                onDeleteColumn={handleDeleteColumn}
+                                onEditCard={handleEditCard}
+                                onDeleteCard={handleDeleteCard}
+                            />
+                        ))}
+                    </div>
+
+                    <DragOverlay>
+                        {activeCard ? (
+                            <div className="rounded-xl px-3.5 py-2.5 w-72 bg-raised border border-teal-500/40 shadow-[0_10px_30px_-10px_rgba(20,184,166,0.4)]">
+                                <p className="text-sm text-ink font-medium">{activeCard.title}</p>
+                            </div>
+                        ) : null}
+                    </DragOverlay>
+                </DndContext>
+            </main>
+
+            <footer className="relative z-10 shrink-0 text-[11px] sm:text-xs text-faint text-center py-2">
+                Gemboard © {new Date().getFullYear()}
+            </footer>
+
         </div>
     );
 }

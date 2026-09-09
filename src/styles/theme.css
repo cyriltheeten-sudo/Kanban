@@ -1,0 +1,30 @@
+@theme {
+  --color-app: #0a0f10;           /* fond application */
+  --color-surface: #0f1619;       /* panneaux, colonnes, header, carte login */
+  --color-raised: #141d22;        /* cartes, boutons secondaires */
+  --color-raised-hover: #172228;  /* survol des cartes */
+  --color-btn-hover: #1a262d;     /* survol des boutons secondaires */
+  --color-drop: #111a1e;          /* colonne survolée pendant un drag */
+  --color-field: #0b1012;         /* fond des champs (inputs) */
+
+  /* Bords */
+  --color-hair: #ffffff12;        /* filet ~7 % */
+  --color-hair-soft: #ffffff0d;   /* filet ~5 % (séparateurs) */
+  --color-rim: #26333a;           /* liseré marqué (carte login) */
+
+  /* Texte */
+  --color-ink: #e7eef0;           /* principal */
+  --color-ink-soft: #c4ced1;      /* labels */
+  --color-muted: #a4b1b5;         /* secondaire */
+  --color-faint: #7e8d92;         /* discret / méta */
+  --color-placeholder: #6f7d82;   /* placeholders (unifié, lisible) */
+
+  /* Gems */
+  --color-gem-1: #2dd4bf;
+  --color-gem-2: #38bdf8;
+  --color-gem-3: #a855f7;
+  --color-gem-4: #f43f5e;
+  --color-gem-5: #f59e0b;
+  --color-gem-6: #10b981;
+  --color-gem-7: #6366f1;
+}
