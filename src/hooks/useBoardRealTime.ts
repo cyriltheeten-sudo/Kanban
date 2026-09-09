@@ -1,12 +1,9 @@
 import { useEffect } from "react";
 import * as signalR from "@microsoft/signalr";
 import { setConnectionId } from "../api/realtime";
-import type { Board } from "../types";
 
-export function useBoardRealTime(board: Board | null, loadBoard: () => void) {
+export function useBoardRealTime(boardId: number, loadBoard: () => void) {
     useEffect(() => {
-        if (!board) return;
-
         const connection = new signalR.HubConnectionBuilder()
             .withUrl(`${import.meta.env.VITE_API_URL}/hubs/kanban`)
             .withAutomaticReconnect()
@@ -23,7 +20,7 @@ export function useBoardRealTime(board: Board | null, loadBoard: () => void) {
             .then(() => {
                 console.log("SignalR connecté ✅");
                 setConnectionId(connection.connectionId);
-                return connection.invoke("JoinBoard", board.id);
+                return connection.invoke("JoinBoard", boardId);
             })
             .catch((err) => console.error("SignalR erreur :", err));
 
@@ -31,5 +28,5 @@ export function useBoardRealTime(board: Board | null, loadBoard: () => void) {
             setConnectionId(null);
             connection.stop();
         };
-    }, [board?.id]);
+    }, [boardId, loadBoard]);
 }
