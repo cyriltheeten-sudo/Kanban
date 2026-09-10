@@ -25,3 +25,10 @@ export function moveCard(id: number, columnId: number, order: number): Promise<v
     body: JSON.stringify({ columnId, order }),
   });
 }
+
+export function upsertCardEntry(cardId: number, columnId: number, content: string): Promise<void> {
+  return apiFetch<void>(`/cards/${cardId}/entries/${columnId}`, {
+    method: "PUT",
+    body: JSON.stringify({ content }),
+  });
+}

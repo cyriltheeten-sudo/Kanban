@@ -11,7 +11,7 @@ function NavigationBridge() {
   useEffect(() => {
     setNavigate(navigate);
   }, [navigate]);
-  return null;   // ne rend rien : purement technique
+  return null;
 }
 
 function RequireAuth({ children }: { children: ReactNode }) {

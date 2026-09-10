@@ -8,6 +8,8 @@ import { useBoard } from "../hooks/useBoard";
 import { useBoardRealTime } from "../hooks/useBoardRealTime";
 import { useDragAndDrop } from "../hooks/useDragAndDrop";
 import { useParams, useNavigate } from "react-router";
+import type { Card } from "../types";
+import CardModal from "../components/CardModal";
 
 const GEMS = [
     "var(--color-gem-1)",
@@ -30,6 +32,7 @@ export default function BoardPage() {
         useDragAndDrop(board, setBoard, loadBoard, setActionError);
     const [newCardTitles, setNewCardTitles] = useState<Record<number, string>>({});
     const [newColumnTitle, setNewColumnTitle] = useState("");
+    const [openCard, setOpenCard] = useState<Card | null>(null);
 
     useEffect(() => {
         if (!actionError) return;
@@ -149,6 +152,13 @@ export default function BoardPage() {
                         {actionError}
                     </div>
                 )}
+                {openCard && (
+                    <CardModal
+                        card={openCard}
+                        columns={board.columns}
+                        onClose={() => setOpenCard(null)}
+                    />
+                )}
                 <div className="shrink-0 px-4 sm:px-6 pb-3">
                     <input
                         value={newColumnTitle}
@@ -177,6 +187,7 @@ export default function BoardPage() {
                                 onDeleteColumn={handleDeleteColumn}
                                 onEditCard={handleEditCard}
                                 onDeleteCard={handleDeleteCard}
+                                onOpenCard={setOpenCard}
                             />
                         ))}
                     </div>

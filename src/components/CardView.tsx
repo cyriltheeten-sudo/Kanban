@@ -7,9 +7,10 @@ interface CardViewProps {
     gem: string;
     onEdit: (id: number, title: string) => void;
     onDelete: (id: number) => void;
+    onOpen: (card: Card) => void;
 }
 
-export default function CardView({ card, gem, onEdit, onDelete }: CardViewProps) {
+export default function CardView({ card, gem, onEdit, onDelete, onOpen }: CardViewProps) {
     const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
         useSortable({ id: `card-${card.id}` });
 
@@ -33,17 +34,15 @@ export default function CardView({ card, gem, onEdit, onDelete }: CardViewProps)
             onMouseLeave={(e) => { e.currentTarget.style.background = baseBg; }}
         >
             <div className="flex items-start justify-between gap-2">
-                <p {...listeners} {...attributes} className="text-sm text-[#e7eef0] font-medium leading-snug flex-1">
+                <p {...listeners} {...attributes} className="text-sm text-ink font-medium leading-snug flex-1">
                     {card.title}
                 </p>
                 <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition shrink-0">
-                    <button onClick={() => onEdit(card.id, card.title)} className="text-[#7e8d92] hover:text-[#e7eef0] text-xs px-1">✎</button>
-                    <button onClick={() => onDelete(card.id)} className="text-[#7e8d92] hover:text-red-400 text-xs px-1">✕</button>
+                    <button onClick={() => onEdit(card.id, card.title)} className="text-faint hover:text-ink text-xs px-1">✎</button>
+                    <button onClick={() => onDelete(card.id)} className="text-faint hover:text-red-400 text-xs px-1">✕</button>
+                    <button onClick={(e) => { e.stopPropagation(); onOpen(card); }} className="text-faint hover:text-ink text-xs px-1" title="Ouvrir la carte">⋯</button>
                 </div>
             </div>
-            {card.description && (
-                <p className="mt-1.5 text-xs text-[#a4b1b5] leading-normal">{card.description}</p>
-            )}
         </div>
     );
 }
