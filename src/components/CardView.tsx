@@ -5,15 +5,18 @@ import type { Card } from "../types";
 interface CardViewProps {
     card: Card;
     gem: string;
+    gemByColumnId: Record<number, string>;
     onOpen: (card: Card) => void;
 }
 
-export default function CardView({ card, gem, onOpen }: CardViewProps) {
+export default function CardView({ card, gem, gemByColumnId, onOpen }: CardViewProps) {
     const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
         useSortable({ id: `card-${card.id}` });
 
     const baseBg = `linear-gradient(135deg, ${gem}14 0%, #141d22 55%)`;
     const hoverBg = `linear-gradient(135deg, ${gem}24 0%, #172228 55%)`;
+    const sortedEntries = [...card.entries].sort((a, b) => a.columnId - b.columnId);
+
 
     const style = {
         transform: CSS.Transform.toString(transform),
@@ -39,10 +42,21 @@ export default function CardView({ card, gem, onOpen }: CardViewProps) {
                 {card.title}
             </p>
 
-            <span
-                className="h-2 w-2 rounded-full"
-                style={{ background: gem, boxShadow: `0 0 6px color-mix(in srgb, ${gem} 40%, transparent)` }}
-            />
+            {sortedEntries.length > 0 && (
+                <div className="flex items-center gap-1">
+                    {sortedEntries.map((entry) => (
+                        <span
+                            key={entry.id}
+                            className="h-2 w-2 rounded-full"
+                            style={{
+                                background: gemByColumnId[entry.columnId],
+                                boxShadow: `0 0 5px color-mix(in srgb, ${gemByColumnId[entry.columnId]} 40%, transparent)`,
+                            }}
+                            title="Étape renseignée"
+                        />
+                    ))}
+                </div>
+            )}
 
             <button
                 onClick={(e) => { e.stopPropagation(); onOpen(card); }}

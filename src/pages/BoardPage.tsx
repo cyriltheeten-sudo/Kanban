@@ -32,6 +32,7 @@ export default function BoardPage() {
     const [newCardTitles, setNewCardTitles] = useState<Record<number, string>>({});
     const [openCard, setOpenCard] = useState<Card | null>(null);
 
+
     useEffect(() => {
         if (!actionError) return;
         const t = setTimeout(() => setActionError(null), 4000);
@@ -67,6 +68,7 @@ export default function BoardPage() {
         setNewCardTitles((prev) => ({ ...prev, [columnId]: value }));
     }
 
+
     if (error) {
         return (
             <div className="relative min-h-screen w-full bg-app bg-[radial-gradient(circle_at_50%_0%,rgba(20,184,166,0.12)_0%,rgba(13,148,136,0.05)_30%,rgba(10,15,16,0)_60%)] text-ink flex items-center justify-center p-4 text-center overflow-hidden font-sans">
@@ -85,6 +87,11 @@ export default function BoardPage() {
             </div>
         );
     }
+
+    const gemByColumnId: Record<number, string> = {};
+    board.columns.forEach((col, index) => {
+        gemByColumnId[col.id] = GEMS[index % GEMS.length];
+    });
 
     return (
         <div className="relative h-screen w-full bg-app bg-[radial-gradient(circle_at_50%_0%,rgba(20,184,166,0.12)_0%,rgba(13,148,136,0.05)_30%,rgba(10,15,16,0)_60%)] text-ink flex flex-col overflow-hidden font-sans selection:bg-teal-500/20 selection:text-teal-300">
@@ -157,6 +164,7 @@ export default function BoardPage() {
                                 key={col.id}
                                 column={col}
                                 gem={GEMS[index % GEMS.length]}
+                                gemByColumnId={gemByColumnId}
                                 newCardTitle={newCardTitles[col.id] ?? ""}
                                 onNewCardTitleChange={handleNewCardTitleChange}
                                 onAddCard={handleAddCard}

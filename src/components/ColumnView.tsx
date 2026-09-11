@@ -7,6 +7,7 @@ interface ColumnViewProps {
     column: Column;
     gem: string;
     newCardTitle: string;
+    gemByColumnId: Record<number, string>;
     onNewCardTitleChange: (columnId: number, value: string) => void;
     onAddCard: (columnId: number) => void;
     onOpenCard: (card: Card) => void;
@@ -15,6 +16,7 @@ interface ColumnViewProps {
 export default function ColumnView({
     column,
     gem,
+    gemByColumnId,
     newCardTitle,
     onNewCardTitleChange,
     onAddCard,
@@ -26,6 +28,7 @@ export default function ColumnView({
             ref={setNodeRef}
             className={`w-72 shrink-0 flex flex-col min-h-0 rounded-2xl sm:rounded-3xl p-4 sm:p-5 transition-all duration-200 bg-surface ${isOver ? "ring-1 ring-teal-500/40 bg-drop" : ""}`}
         >
+            {/* En-tête : fixe (shrink-0) */}
             <div className="shrink-0 flex items-center gap-2 px-1 pb-4">
 
                 <span
@@ -53,7 +56,7 @@ export default function ColumnView({
             >
                 <div className="flex-1 min-h-0 overflow-y-auto flex flex-col gap-2 pr-1">
                     {column.cards.map((card) => (
-                        <CardView key={card.id} card={card} gem={gem} onOpen={onOpenCard} />
+                        <CardView key={card.id} card={card} gem={gem} gemByColumnId={gemByColumnId} onOpen={onOpenCard} />
                     ))}
                 </div>
             </SortableContext>
