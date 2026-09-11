@@ -5,12 +5,13 @@ import { updateCard, upsertCardEntry } from "../api/cards";
 interface CardModalProps {
     card: Card;
     columns: Column[];
-    gems: string[];              // la palette, pour colorer chaque bouton
+    gems: string[];
     onClose: () => void;
-    onSaved: () => void;         // demande à BoardPage de recharger
+    onSaved: () => void;
+    onDelete: () => void
 }
 
-export default function CardModal({ card, columns, gems, onClose, onSaved }: CardModalProps) {
+export default function CardModal({ card, columns, gems, onClose, onSaved, onDelete }: CardModalProps) {
     const [drafts, setDrafts] = useState<Record<number, string>>(() => {
         const initial: Record<number, string> = {};
         for (const col of columns) {
@@ -23,6 +24,7 @@ export default function CardModal({ card, columns, gems, onClose, onSaved }: Car
     const [savingTitle, setSavingTitle] = useState(false);
     const [savingColumnId, setSavingColumnId] = useState<number | null>(null);
     const [error, setError] = useState<string | null>(null);
+    const [confirmingDelete, setConfirmingDelete] = useState(false)
 
     async function handleSaveTitle() {
         const next = titleDraft.trim();
@@ -125,10 +127,39 @@ export default function CardModal({ card, columns, gems, onClose, onSaved }: Car
                             >
                                 {savingColumnId === column.id ? "Enregistrement…" : "Enregistrer"}
                             </button>
+
                         </div>
+
                     );
                 })}
+                <div className="mt-2 border-t border-hair-soft pt-4">
+                    {confirmingDelete ? (
+                        <div className="flex items-center gap-2">
+                            <span className="text-xs text-muted flex-1">Supprimer cette carte définitivement ?</span>
+                            <button
+                                onClick={onDelete}
+                                className="rounded-lg bg-red-500/20 text-red-400 hover:bg-red-500/30 px-3 py-1.5 text-xs font-semibold transition-colors"
+                            >
+                                Confirmer
+                            </button>
+                            <button
+                                onClick={() => setConfirmingDelete(false)}
+                                className="rounded-lg bg-field text-faint hover:text-ink px-3 py-1.5 text-xs transition-colors"
+                            >
+                                Annuler
+                            </button>
+                        </div>
+                    ) : (
+                        <button
+                            onClick={() => setConfirmingDelete(true)}
+                            className="text-xs text-faint hover:text-red-400 transition-colors"
+                        >
+                            Supprimer la carte
+                        </button>
+                    )}
+                </div>
             </div>
+
         </div>
     );
 }

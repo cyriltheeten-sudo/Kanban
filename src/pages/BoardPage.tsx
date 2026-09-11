@@ -1,9 +1,8 @@
 import { useState, useEffect } from "react";
 import { updateBoard } from "../api/boards";
 import { createCard, deleteCard } from "../api/cards";
-import { createColumn, deleteColumn } from "../api/columns";
 import ColumnView from "../components/ColumnView";
-import { DndContext, closestCorners, DragOverlay } from "@dnd-kit/core";
+import { DndContext, pointerWithin, DragOverlay } from "@dnd-kit/core";
 import { useBoard } from "../hooks/useBoard";
 import { useBoardRealTime } from "../hooks/useBoardRealTime";
 import { useDragAndDrop } from "../hooks/useDragAndDrop";
@@ -31,7 +30,6 @@ export default function BoardPage() {
     const { sensors, activeCard, handleDragStart, handleDragEnd } =
         useDragAndDrop(board, setBoard, loadBoard, setActionError);
     const [newCardTitles, setNewCardTitles] = useState<Record<number, string>>({});
-    const [newColumnTitle, setNewColumnTitle] = useState("");
     const [openCard, setOpenCard] = useState<Card | null>(null);
 
     useEffect(() => {
@@ -54,18 +52,6 @@ export default function BoardPage() {
 
     async function handleDeleteCard(id: number) {
         try { await deleteCard(id); loadBoard(); }
-        catch (e) { setActionError(e instanceof Error ? e.message : "Erreur inconnue"); }
-    }
-
-    async function handleAddColumn() {
-        const title = newColumnTitle.trim();
-        if (!title || !board) return;
-        try { await createColumn(title, board.id); setNewColumnTitle(""); loadBoard(); }
-        catch (e) { setActionError(e instanceof Error ? e.message : "Erreur inconnue"); }
-    }
-
-    async function handleDeleteColumn(id: number) {
-        try { await deleteColumn(id); loadBoard(); }
         catch (e) { setActionError(e instanceof Error ? e.message : "Erreur inconnue"); }
     }
 
@@ -152,21 +138,16 @@ export default function BoardPage() {
                         gems={GEMS}
                         onClose={() => setOpenCard(null)}
                         onSaved={() => { setOpenCard(null); loadBoard(); }}
+                        onDelete={async () => {
+                            await handleDeleteCard(openCard.id);
+                            setOpenCard(null);
+                        }}
                     />
                 )}
-                <div className="shrink-0 px-4 sm:px-6 pb-3">
-                    <input
-                        value={newColumnTitle}
-                        onChange={(e) => setNewColumnTitle(e.target.value)}
-                        onKeyDown={(e) => e.key === "Enter" && handleAddColumn()}
-                        placeholder="+ Nouvelle colonne"
-                        className="w-full sm:w-72 rounded-xl bg-field px-4 py-2.5 text-sm text-ink placeholder:text-placeholder outline-none transition-colors duration-200 focus-visible:ring-1 focus-visible:ring-teal-500/30 autofill:shadow-[0_0_0_30px_var(--color-field)_inset] autofill:[-webkit-text-fill-color:var(--color-ink)] autofill:caret-white"
-                    />
-                </div>
 
                 <DndContext
                     sensors={sensors}
-                    collisionDetection={closestCorners}
+                    collisionDetection={pointerWithin}
                     onDragStart={handleDragStart}
                     onDragEnd={handleDragEnd}
                 >
@@ -179,8 +160,6 @@ export default function BoardPage() {
                                 newCardTitle={newCardTitles[col.id] ?? ""}
                                 onNewCardTitleChange={handleNewCardTitleChange}
                                 onAddCard={handleAddCard}
-                                onDeleteColumn={handleDeleteColumn}
-                                onDeleteCard={handleDeleteCard}
                                 onOpenCard={setOpenCard}
                             />
                         ))}
