@@ -10,7 +10,6 @@ interface ColumnViewProps {
     onNewCardTitleChange: (columnId: number, value: string) => void;
     onAddCard: (columnId: number) => void;
     onDeleteColumn: (id: number) => void;
-    onEditCard: (id: number, title: string) => void;
     onDeleteCard: (id: number) => void;
     onOpenCard: (card: Card) => void;
 }
@@ -22,7 +21,6 @@ export default function ColumnView({
     onNewCardTitleChange,
     onAddCard,
     onDeleteColumn,
-    onEditCard,
     onDeleteCard,
     onOpenCard,
 }: ColumnViewProps) {
@@ -66,7 +64,7 @@ export default function ColumnView({
             >
                 <div className="flex-1 min-h-0 overflow-y-auto flex flex-col gap-2 pr-1">
                     {column.cards.map((card) => (
-                        <CardView key={card.id} card={card} gem={gem} onEdit={onEditCard} onDelete={onDeleteCard} onOpen={onOpenCard} />
+                        <CardView key={card.id} card={card} gem={gem} onDelete={onDeleteCard} onOpen={onOpenCard} />
                     ))}
                 </div>
             </SortableContext>

@@ -5,12 +5,11 @@ import type { Card } from "../types";
 interface CardViewProps {
     card: Card;
     gem: string;
-    onEdit: (id: number, title: string) => void;
     onDelete: (id: number) => void;
     onOpen: (card: Card) => void;
 }
 
-export default function CardView({ card, gem, onEdit, onDelete, onOpen }: CardViewProps) {
+export default function CardView({ card, gem, onDelete, onOpen }: CardViewProps) {
     const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
         useSortable({ id: `card-${card.id}` });
 
@@ -38,7 +37,6 @@ export default function CardView({ card, gem, onEdit, onDelete, onOpen }: CardVi
                     {card.title}
                 </p>
                 <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition shrink-0">
-                    <button onClick={() => onEdit(card.id, card.title)} className="text-faint hover:text-ink text-xs px-1">✎</button>
                     <button onClick={() => onDelete(card.id)} className="text-faint hover:text-red-400 text-xs px-1">✕</button>
                     <button onClick={(e) => { e.stopPropagation(); onOpen(card); }} className="text-faint hover:text-ink text-xs px-1" title="Ouvrir la carte">⋯</button>
                 </div>

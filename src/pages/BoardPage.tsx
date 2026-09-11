@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { updateBoard } from "../api/boards";
-import { createCard, deleteCard, updateCard } from "../api/cards";
+import { createCard, deleteCard } from "../api/cards";
 import { createColumn, deleteColumn } from "../api/columns";
 import ColumnView from "../components/ColumnView";
 import { DndContext, closestCorners, DragOverlay } from "@dnd-kit/core";
@@ -54,13 +54,6 @@ export default function BoardPage() {
 
     async function handleDeleteCard(id: number) {
         try { await deleteCard(id); loadBoard(); }
-        catch (e) { setActionError(e instanceof Error ? e.message : "Erreur inconnue"); }
-    }
-
-    async function handleEditCard(id: number, currentTitle: string) {
-        const next = prompt("Nouveau titre :", currentTitle);
-        if (next === null || next.trim() === "") return;
-        try { await updateCard(id, next.trim()); loadBoard(); }
         catch (e) { setActionError(e instanceof Error ? e.message : "Erreur inconnue"); }
     }
 
@@ -156,7 +149,9 @@ export default function BoardPage() {
                     <CardModal
                         card={openCard}
                         columns={board.columns}
+                        gems={GEMS}
                         onClose={() => setOpenCard(null)}
+                        onSaved={() => { setOpenCard(null); loadBoard(); }}
                     />
                 )}
                 <div className="shrink-0 px-4 sm:px-6 pb-3">
@@ -185,7 +180,6 @@ export default function BoardPage() {
                                 onNewCardTitleChange={handleNewCardTitleChange}
                                 onAddCard={handleAddCard}
                                 onDeleteColumn={handleDeleteColumn}
-                                onEditCard={handleEditCard}
                                 onDeleteCard={handleDeleteCard}
                                 onOpenCard={setOpenCard}
                             />
