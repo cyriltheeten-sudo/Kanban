@@ -30,9 +30,16 @@ if (reponse.status === 401) {
     redirectToLogin();
     throw new Error("Session expirée");
 }
-  if (!reponse.ok) {
+
+if (reponse.status === 429) {
+    // Le serveur a mis un message explicite dans le corps → on le récupère
+    const data = await reponse.json().catch(() => null);
+    throw new Error(data?.message ?? "Trop de tentatives. Réessaie plus tard.");
+}
+
+if (!reponse.ok) {
     throw new Error("Une erreur est survenue. Réessaie dans un instant.", { cause: reponse.status });
-  }
+}
   if (reponse.status === 204) return undefined as T;
 
   return (await reponse.json()) as T;

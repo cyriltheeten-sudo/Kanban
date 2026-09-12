@@ -12,9 +12,12 @@ export async function login(email: string, password: string): Promise<LoginRespo
     body: JSON.stringify({ email, password }),
   });
 
-  if (!reponse.ok) {
+if (reponse.status === 429) {
+    const data = await reponse.json().catch(() => null);
+    throw new Error(data?.message ?? "Trop de tentatives. Réessaie plus tard.");
+}
+if (!reponse.ok) {
     throw new Error("Email ou mot de passe incorrect.");
-  }
-
+}
   return (await reponse.json()) as LoginResponse;
 }
