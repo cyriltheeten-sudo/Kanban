@@ -14,6 +14,8 @@ export default function BoardListPage() {
     const [isSelectOpen, setIsSelectOpen] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [chargement, setChargement] = useState(true);
+    const [confirmingId, setConfirmingId] = useState<number | null>(null);
+    const [nameError, setNameError] = useState(false);
 
     const selectRef = useRef<HTMLDivElement>(null);
 
@@ -57,7 +59,11 @@ export default function BoardListPage() {
 
     async function handleCreate() {
         const name = newName.trim();
-        if (!name) return;
+        if (!name) {
+            setNameError(true);
+            return;
+        }
+        setNameError(false);
         try {
             const newBoard = await createBoard(name, selectedTemplateId);
             setNewName("");
@@ -68,12 +74,13 @@ export default function BoardListPage() {
     }
 
     async function handleDelete(id: number) {
-        if (!confirm("Supprimer ce tableau et toutes ses cartes ?")) return;
         try {
             await deleteBoard(id);
             setBoards((prev) => prev.filter((b) => b.id !== id));
         } catch (e) {
             setError(e instanceof Error ? e.message : "Erreur inconnue");
+        } finally {
+            setConfirmingId(null);
         }
     }
 
@@ -135,9 +142,12 @@ export default function BoardListPage() {
                     <div className="flex flex-col sm:flex-row gap-3">
                         <input
                             value={newName}
-                            onChange={(e) => setNewName(e.target.value)}
+                            onChange={(e) => {
+                                setNewName(e.target.value);
+                                if (nameError) setNameError(false);
+                            }}
                             placeholder="Nom du tableau..."
-                            className="flex-1 rounded-xl bg-field px-4 py-3 text-sm text-ink placeholder:text-placeholder outline-none transition-colors duration-200 autofill:shadow-[0_0_0_30px_var(--color-field)_inset] autofill:[-webkit-text-fill-color:var(--color-ink)] autofill:caret-white"
+                            className={`flex-1 rounded-xl bg-field px-4 py-3 text-sm text-ink placeholder:text-placeholder outline-none transition-colors duration-200 autofill:shadow-[0_0_0_30px_var(--color-field)_inset] autofill:[-webkit-text-fill-color:var(--color-ink)] autofill:caret-white ${nameError ? "ring-1 ring-red-500/60" : ""}`}
                         />
 
                         <div className="relative min-w-50" ref={selectRef}>
@@ -209,19 +219,35 @@ export default function BoardListPage() {
                                         <h3 className="font-semibold text-lg text-ink group-hover:text-teal-300 transition-colors line-clamp-1">
                                             {board.name}
                                         </h3>
-                                        <button
-                                            type="button"
-                                            onClick={(e) => {
-                                                e.stopPropagation();
-                                                handleDelete(board.id);
-                                            }}
-                                            title="Supprimer ce tableau"
-                                            className="shrink-0 p-2 rounded-lg bg-field text-faint hover:text-red-400 hover:bg-red-500/20 transition-colors duration-200"
-                                        >
-                                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                            </svg>
-                                        </button>
+                                        {confirmingId === board.id ? (
+                                            <div className="shrink-0 flex items-center gap-1.5" onClick={(e) => e.stopPropagation()}>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => handleDelete(board.id)}
+                                                    className="rounded-lg bg-red-500/20 text-red-400 hover:bg-red-500/30 px-2.5 py-1 text-xs font-semibold transition-colors"
+                                                >
+                                                    Confirmer
+                                                </button>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setConfirmingId(null)}
+                                                    className="rounded-lg bg-field text-faint hover:text-ink px-2.5 py-1 text-xs transition-colors"
+                                                >
+                                                    Annuler
+                                                </button>
+                                            </div>
+                                        ) : (
+                                            <button
+                                                type="button"
+                                                onClick={(e) => { e.stopPropagation(); setConfirmingId(board.id); }}
+                                                title="Supprimer ce tableau"
+                                                className="shrink-0 p-2 rounded-lg bg-field text-faint hover:text-red-400 hover:bg-red-500/20 transition-colors duration-200"
+                                            >
+                                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                                </svg>
+                                            </button>
+                                        )}
                                     </div>
 
                                     <div className="flex justify-between items-center pt-3">

@@ -31,6 +31,8 @@ export default function BoardPage() {
         useDragAndDrop(board, setBoard, loadBoard, setActionError);
     const [newCardTitles, setNewCardTitles] = useState<Record<number, string>>({});
     const [openCard, setOpenCard] = useState<Card | null>(null);
+    const [editingName, setEditingName] = useState(false);
+    const [nameDraft, setNameDraft] = useState("");
 
 
     useEffect(() => {
@@ -56,12 +58,23 @@ export default function BoardPage() {
         catch (e) { setActionError(e instanceof Error ? e.message : "Erreur inconnue"); }
     }
 
-    async function handleRenameBoard() {
+    function startEditingName() {
         if (!board) return;
-        const next = prompt("Nom du tableau :", board.name);
-        if (next === null || next.trim() === "") return;
-        try { await updateBoard(board.id, next.trim()); loadBoard(); }
-        catch (e) { setActionError(e instanceof Error ? e.message : "Erreur inconnue"); }
+        setNameDraft(board.name);
+        setEditingName(true);
+    }
+
+    async function handleSaveName() {
+        if (!board) return;
+        const next = nameDraft.trim();
+        setEditingName(false);
+        if (!next || next === board.name) return;   // rien à changer
+        try {
+            await updateBoard(board.id, next);
+            loadBoard();
+        } catch (e) {
+            setActionError(e instanceof Error ? e.message : "Erreur inconnue");
+        }
     }
 
     function handleNewCardTitleChange(columnId: number, value: string) {
@@ -112,13 +125,27 @@ export default function BoardPage() {
                         <span className="text-white">Board</span>
                     </h1>
                     <span className="text-faint">/</span>
-                    <h2
-                        onClick={handleRenameBoard}
-                        className="text-sm sm:text-base font-semibold text-ink cursor-pointer hover:text-teal-300 transition-colors"
-                        title="Cliquer pour renommer"
-                    >
-                        {board.name}
-                    </h2>
+                    {editingName ? (
+                        <input
+                            autoFocus
+                            value={nameDraft}
+                            onChange={(e) => setNameDraft(e.target.value)}
+                            onBlur={() => setEditingName(false)}
+                            onKeyDown={(e) => {
+                                if (e.key === "Enter") handleSaveName();
+                                if (e.key === "Escape") setEditingName(false);
+                            }}
+                            className="text-sm sm:text-base font-semibold bg-field text-ink rounded-lg px-2 py-1 outline-none focus-visible:ring-1 focus-visible:ring-teal-500/30 min-w-0"
+                        />
+                    ) : (
+                        <h2
+                            onClick={startEditingName}
+                            className="text-sm sm:text-base font-semibold text-ink cursor-pointer hover:text-teal-300 transition-colors"
+                            title="Cliquer pour renommer"
+                        >
+                            {board.name}
+                        </h2>
+                    )}
                 </div>
 
                 <button
