@@ -1,74 +1,104 @@
-# Gemboard — Real-time collaborative Kanban board
+# GemBoard
 
-A multi-user project management tool (Trello-style) with **real-time collaboration**: when one user moves, adds or edits a card, everyone else sees it instantly — no refresh. Built and deployed end-to-end as a full-stack portfolio project.
+**A guided task board for people who organise themselves** — solo makers, freelancers and learners.
+Not another generic Kanban: in GemBoard each column is a *step with a purpose*, and a card **accumulates its content as it moves through the workflow** — so a card becomes the readable history of its own progress.
 
-**🔗 Live demo: https://kanban-cyril14.vercel.app**
+🔗 **Live demo:** https://kanban-cyril14.vercel.app
+📦 **Backend repository:** https://github.com/cyriltheeten-sudo/Kanban.api
 
-> The API is hosted on a free tier that sleeps after inactivity — the **first request may take ~30–60s** to wake up, then it's instant.
+![GemBoard — a guided "Learning" board with SOLID cards and progress pastilles](docs/Board.png)
 
-![React](https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=white)
-![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?logo=typescript&logoColor=white)
-![.NET](https://img.shields.io/badge/ASP.NET_Core-C%23-512BD4?logo=dotnet&logoColor=white)
-![PostgreSQL](https://img.shields.io/badge/PostgreSQL-4169E1?logo=postgresql&logoColor=white)
-![SignalR](https://img.shields.io/badge/SignalR-real--time-FF6A00)
+> ⏱️ The API runs on Render's free tier and sleeps after inactivity — the **first request can take ~30s** to wake it up.
 
----
-
-<!-- TODO: replace with a GIF of the real-time demo (two windows side by side, a card moved in one appears in the other). -->
-![Gemboard demo](docs/demo.gif)
+> 🔑 **Demo access** — account creation is restricted to admins, so use the demo account:
+> **email:** `demo@kanban.fr` · **password:** `demo`
 
 ---
+
+## What makes it different
+
+Generic boards give you empty columns and don't care what you put in them. GemBoard ships with **guided templates** (e.g. *Learning*, *Development cycle*) where every step tells you what to write, and a card carries a **separate entry per step** — objective, resources, journal, outcome — all kept as you progress. The goal is a tool with a point of view: it helps you *frame and track* your progress rather than just move tickets around.
 
 ## Features
 
-- **Real-time collaboration** — changes propagate live to all connected users via SignalR (WebSockets).
-- **Authentication** — sign-up / login with JWT, password hashing, protected routes.
-- **Boards, columns, cards** — full CRUD from the interface.
-- **Drag & drop** — move cards within and across columns, with server-side persistence of order.
-- **Production-ready** — deployed to the cloud with proper CORS, environment variables and secrets handling.
+- **Guided project templates** — predefined step-columns, each with its own guidance (e.g. *Learning*: Theory → Understanding → Practice → Acquired).
+- **Cards that accumulate** — one editable entry per step, so a card holds its whole journey. Coloured pastilles on each card show at a glance which steps are filled.
+- **Real-time collaboration** — boards sync live across clients via SignalR (WebSockets).
+- **Drag & drop** — reorder cards and move them between steps (@dnd-kit), with optimistic UI.
+- **Authentication & data isolation** — JWT auth; every action is checked so a user can only reach their own boards, columns and cards.
+- **Polished dark UI** — custom design-token theme, responsive.
 
 ## Tech stack
 
 | Layer | Technologies |
 |---|---|
-| **Frontend** | React 19, TypeScript, Vite, Tailwind CSS, @dnd-kit, @microsoft/signalr |
-| **Backend** | ASP.NET Core (C#), Entity Framework Core, SignalR, JWT |
-| **Database** | PostgreSQL (Neon) |
-| **Deployment** | Vercel (frontend), Render + Docker (API), Neon (database) |
+| **Frontend** | React 19 · TypeScript · Vite · Tailwind CSS v4 · React Router v7 · @dnd-kit · @microsoft/signalr |
+| **Backend** | ASP.NET Core (.NET 8) · Entity Framework Core · SignalR · PostgreSQL · JWT |
+| **Infra** | Frontend on Vercel · API on Render (Docker) · Database on Neon |
 
-## Architecture
+## Architecture highlights
 
-```
-Frontend (Vercel)  ──REST + WebSocket──►  API (Render, Docker)  ──►  PostgreSQL (Neon)
-        ▲                                        │
-        └──────────── real-time (SignalR) ───────┘
-```
+A few things I paid particular attention to:
 
-The frontend is a static build served on a CDN; the API is a containerized ASP.NET Core service. Writes go through the REST API, and the API broadcasts changes over SignalR so every connected client stays in sync.
-
-## Repositories
-
-- **Frontend** — this repository
-- **Backend API** — https://github.com/cyriltheeten-sudo/Kanban.api
+- **Centralised API client** — a single `apiFetch` wrapper handles auth headers, error normalisation and session expiry, so error handling lives in one place.
+- **Custom hooks** — board loading, real-time sync and drag-and-drop are each extracted into their own hook (`useBoard`, `useBoardRealTime`, `useDragAndDrop`), keeping the page component thin.
+- **Read DTOs** — the API never serialises entities directly; dedicated read DTOs shape exactly what the client receives and avoid reference cycles.
+- **Object-level authorisation** — ownership is enforced *before* every mutating action through a single `IsBoardOwnedBy` check; unauthorised access returns `404` without revealing whether the resource exists.
+- **Rate-limited login** — 5 attempts/min per IP (fixed window), with the real client IP resolved correctly behind the hosting proxy.
 
 ## Running locally
 
-You need the [backend API](https://github.com/cyriltheeten-sudo/Kanban.api) running first (see its README).
+### Prerequisites
+- Node.js 18+ and npm
+- .NET 8 SDK
+- A PostgreSQL database (local or hosted)
+
+### Backend
+See the [backend repository](https://github.com/cyriltheeten-sudo/Kanban.api). It expects the following configuration (via user secrets or environment variables):
+
+- `ConnectionStrings__DefaultConnection` — your PostgreSQL connection string
+- `Jwt__Key` — a secret signing key
+- `Jwt__Issuer` — the token issuer
+
+Then run `dotnet run`. Migrations are applied and the default templates seeded on startup.
+
+### Frontend
 
 ```bash
-# 1. install dependencies
 npm install
 
-# 2. point the app at your local API
-#    create a .env.development file with:
-#    VITE_API_URL=https://localhost:7007
+# .env.development
+# VITE_API_URL=https://localhost:7007
 
-# 3. start the dev server
 npm run dev
 ```
 
-The app runs on `http://localhost:5173`.
+## Testing
 
-## What this project demonstrates
+The API is covered by **30 xUnit unit tests** on the service layer (business logic + per-user data isolation), using EF Core's in-memory provider so each test runs in isolation.
 
-Full-stack ownership from design to production: a relational data model, authentication, real-time communication, modern UI interactions, and a complete cloud deployment (containerization, managed database, environment configuration).
+```bash
+dotnet test
+```
+
+## Screenshots
+
+**Card detail** — each step shows its guidance and its own editable entry; the card's whole journey in one place.
+
+![Card detail modal with a guided entry per step](docs/ModalEdit.png)
+
+**Your boards** — create a board from a template and see them all at a glance.
+
+![Board list and board creation from a template](docs/BoardList.png)
+
+**Sign in**
+
+![GemBoard sign-in screen](docs/login.png)
+
+## Status
+
+GemBoard is deployed and actively used to track my own projects and learning. See the backend repository's testing notes for what is covered and what's planned next.
+
+---
+
+**Author** — Cyril Theeten · [LinkedIn](https://www.linkedin.com/in/cyril-theeten-258a5115a/)
