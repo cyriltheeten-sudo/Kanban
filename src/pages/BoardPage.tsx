@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { updateBoard } from "../api/boards";
-import { createCard, deleteCard } from "../api/cards";
+import { createCard, deleteCard, moveCard } from "../api/cards";
 import ColumnView from "../components/ColumnView";
 import { DndContext, pointerWithin, DragOverlay } from "@dnd-kit/core";
 import { useBoard } from "../hooks/useBoard";
@@ -35,6 +35,7 @@ export default function BoardPage() {
     const [addingColumns, setAddingColumns] = useState<Record<number, boolean>>({});
     const [openCard, setOpenCard] = useState<Card | null>(null);
     const [viewingCard, setViewingCard] = useState<Card | null>(null);
+    const [movingCardId, setMovingCardId] = useState<number | null>(null);
     const [editingName, setEditingName] = useState(false);
     const [nameDraft, setNameDraft] = useState("");
 
@@ -63,6 +64,21 @@ export default function BoardPage() {
     async function handleDeleteCard(id: number) {
         try { await deleteCard(id); loadBoard(); }
         catch (e) { setActionError(e instanceof Error ? e.message : "Erreur inconnue"); }
+    }
+
+    async function handleMoveCard(cardId: number, targetColumnId: number) {
+        if (!board || movingCardId) return;
+        const target = board.columns.find((c) => c.id === targetColumnId);
+        if (!target) return;
+        setMovingCardId(cardId);
+        try {
+            await moveCard(cardId, targetColumnId, target.cards.length);
+            loadBoard();
+        } catch (e) {
+            setActionError(e instanceof Error ? e.message : "Erreur inconnue");
+        } finally {
+            setMovingCardId(null);
+        }
     }
 
     function startEditingName() {
@@ -119,9 +135,13 @@ export default function BoardPage() {
             <header className="relative z-10 shrink-0 w-full flex items-center justify-between px-4 sm:px-6 py-3 bg-surface">
                 <button
                     onClick={() => navigate("/")}
-                    className="text-[10px] sm:text-xs px-3 py-1.5 rounded-xl text-muted hover:text-ink bg-raised hover:bg-btn-hover transition-colors duration-200 active:scale-[0.98] flex items-center gap-1.5"
+                    title="Mes tableaux"
+                    className="text-xs px-2.5 py-2 sm:px-3 sm:py-1.5 rounded-xl text-muted hover:text-ink bg-raised hover:bg-btn-hover transition-colors duration-200 active:scale-[0.98] flex items-center gap-1.5 shrink-0"
                 >
-                    ← Mes tableaux
+                    <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                    </svg>
+                    <span className="hidden sm:inline">Mes tableaux</span>
                 </button>
 
                 <div className="flex items-center gap-2 sm:gap-3">
@@ -160,9 +180,13 @@ export default function BoardPage() {
                         localStorage.removeItem("token");
                         navigate("/login");
                     }}
-                    className="text-[10px] sm:text-xs px-3 py-1.5 rounded-xl text-muted hover:text-ink bg-raised hover:bg-btn-hover transition-colors duration-200 active:scale-[0.98]"
+                    title="Déconnexion"
+                    className="text-xs px-2.5 py-2 sm:px-3 sm:py-1.5 rounded-xl text-muted hover:text-ink bg-raised hover:bg-btn-hover transition-colors duration-200 active:scale-[0.98] flex items-center gap-1.5 shrink-0"
                 >
-                    Déconnexion
+                    <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 5v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                    </svg>
+                    <span className="hidden sm:inline">Déconnexion</span>
                 </button>
             </header>
 
@@ -202,14 +226,17 @@ export default function BoardPage() {
                             <ColumnView
                                 key={col.id}
                                 column={col}
+                                allColumns={board.columns}
                                 gem={GEMS[index % GEMS.length]}
                                 gemByColumnId={gemByColumnId}
                                 newCardTitle={newCardTitles[col.id] ?? ""}
                                 isAddingCard={addingColumns[col.id] ?? false}
+                                movingCardId={movingCardId}
                                 onNewCardTitleChange={handleNewCardTitleChange}
                                 onAddCard={handleAddCard}
                                 onOpenCard={setOpenCard}
                                 onViewCard={setViewingCard}
+                                onMoveCard={handleMoveCard}
                             />
                         ))}
                     </div>

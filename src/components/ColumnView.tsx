@@ -6,29 +6,38 @@ import { useSlowRequestHint } from "../hooks/useSlowRequestHint";
 
 interface ColumnViewProps {
     column: Column;
+    allColumns: Column[];
     gem: string;
     newCardTitle: string;
     isAddingCard: boolean;
     gemByColumnId: Record<number, string>;
+    movingCardId: number | null;
     onNewCardTitleChange: (columnId: number, value: string) => void;
     onAddCard: (columnId: number) => void;
     onOpenCard: (card: Card) => void;
     onViewCard: (card: Card) => void;
+    onMoveCard: (cardId: number, targetColumnId: number) => void;
 }
 
 export default function ColumnView({
     column,
+    allColumns,
     gem,
     gemByColumnId,
     newCardTitle,
     isAddingCard,
+    movingCardId,
     onNewCardTitleChange,
     onAddCard,
     onOpenCard,
     onViewCard,
+    onMoveCard,
 }: ColumnViewProps) {
     const { setNodeRef, isOver } = useDroppable({ id: `column-${column.id}` });
     const showSlowHint = useSlowRequestHint(isAddingCard);
+    const targetColumns = allColumns
+        .filter((c) => c.id !== column.id)
+        .map((c) => ({ id: c.id, title: c.title }));
     return (
         <div
             ref={setNodeRef}
@@ -56,12 +65,25 @@ export default function ColumnView({
                             if (e.key === "Enter" && !e.repeat) onAddCard(column.id);
                         }}
                         disabled={isAddingCard}
+                        enterKeyHint="done"
                         placeholder={isAddingCard ? "Création en cours…" : "+ Nouvelle carte"}
-                        className="w-full rounded-xl bg-field px-4 py-2.5 pr-9 text-sm text-ink placeholder:text-placeholder outline-none transition-colors duration-200 focus-visible:ring-1 focus-visible:ring-teal-500/30 autofill:shadow-[0_0_0_30px_var(--color-field)_inset] autofill:[-webkit-text-fill-color:var(--color-ink)] autofill:caret-white disabled:opacity-60"
+                        className="w-full rounded-xl bg-field pl-4 pr-11 py-2.5 text-sm text-ink placeholder:text-placeholder outline-none transition-colors duration-200 focus-visible:ring-1 focus-visible:ring-teal-500/30 autofill:shadow-[0_0_0_30px_var(--color-field)_inset] autofill:[-webkit-text-fill-color:var(--color-ink)] autofill:caret-white disabled:opacity-60"
                     />
-                    {isAddingCard && (
-                        <span className="absolute right-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 border-2 border-teal-400/30 border-t-teal-400 rounded-full animate-spin" />
-                    )}
+                    <button
+                        type="button"
+                        onClick={() => onAddCard(column.id)}
+                        disabled={isAddingCard || !newCardTitle.trim()}
+                        title="Ajouter la carte"
+                        className="absolute right-1.5 top-1/2 -translate-y-1/2 w-7 h-7 rounded-lg bg-field hover:bg-btn-hover text-faint hover:text-ink transition-colors disabled:opacity-40 flex items-center justify-center"
+                    >
+                        {isAddingCard ? (
+                            <span className="w-3.5 h-3.5 border-2 border-teal-400/30 border-t-teal-400 rounded-full animate-spin" />
+                        ) : (
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" />
+                            </svg>
+                        )}
+                    </button>
                 </div>
                 {showSlowHint && (
                     <p className="mt-1.5 text-[11px] text-faint animate-pulse">
@@ -77,7 +99,17 @@ export default function ColumnView({
             >
                 <div className="flex-1 min-h-0 overflow-y-auto flex flex-col gap-2 pr-1">
                     {column.cards.map((card) => (
-                        <CardView key={card.id} card={card} gem={gem} gemByColumnId={gemByColumnId} onOpen={onOpenCard} onView={onViewCard} />
+                        <CardView
+                            key={card.id}
+                            card={card}
+                            gem={gem}
+                            gemByColumnId={gemByColumnId}
+                            targetColumns={targetColumns}
+                            isMoving={movingCardId === card.id}
+                            onOpen={onOpenCard}
+                            onView={onViewCard}
+                            onMove={onMoveCard}
+                        />
                     ))}
                 </div>
             </SortableContext>
