@@ -2,6 +2,7 @@ import { useDroppable } from "@dnd-kit/core";
 import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import type { Card, Column } from "../types";
 import CardView from "./CardView";
+import { useSlowRequestHint } from "../hooks/useSlowRequestHint";
 
 interface ColumnViewProps {
     column: Column;
@@ -25,6 +26,7 @@ export default function ColumnView({
     onOpenCard,
 }: ColumnViewProps) {
     const { setNodeRef, isOver } = useDroppable({ id: `column-${column.id}` });
+    const showSlowHint = useSlowRequestHint(isAddingCard);
     return (
         <div
             ref={setNodeRef}
@@ -43,16 +45,28 @@ export default function ColumnView({
 
             </div>
 
-            <input
-                value={newCardTitle}
-                onChange={(e) => onNewCardTitleChange(column.id, e.target.value)}
-                onKeyDown={(e) => {
-                    if (e.key === "Enter" && !e.repeat) onAddCard(column.id);
-                }}
-                disabled={isAddingCard}
-                placeholder="+ Nouvelle carte"
-                className="shrink-0 mb-3 w-full rounded-xl bg-field px-4 py-2.5 text-sm text-ink placeholder:text-placeholder outline-none transition-colors duration-200 focus-visible:ring-1 focus-visible:ring-teal-500/30 autofill:shadow-[0_0_0_30px_var(--color-field)_inset] autofill:[-webkit-text-fill-color:var(--color-ink)] autofill:caret-white disabled:opacity-60"
-            />
+            <div className="shrink-0 mb-3">
+                <div className="relative">
+                    <input
+                        value={newCardTitle}
+                        onChange={(e) => onNewCardTitleChange(column.id, e.target.value)}
+                        onKeyDown={(e) => {
+                            if (e.key === "Enter" && !e.repeat) onAddCard(column.id);
+                        }}
+                        disabled={isAddingCard}
+                        placeholder={isAddingCard ? "Création en cours…" : "+ Nouvelle carte"}
+                        className="w-full rounded-xl bg-field px-4 py-2.5 pr-9 text-sm text-ink placeholder:text-placeholder outline-none transition-colors duration-200 focus-visible:ring-1 focus-visible:ring-teal-500/30 autofill:shadow-[0_0_0_30px_var(--color-field)_inset] autofill:[-webkit-text-fill-color:var(--color-ink)] autofill:caret-white disabled:opacity-60"
+                    />
+                    {isAddingCard && (
+                        <span className="absolute right-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 border-2 border-teal-400/30 border-t-teal-400 rounded-full animate-spin" />
+                    )}
+                </div>
+                {showSlowHint && (
+                    <p className="mt-1.5 text-[11px] text-faint animate-pulse">
+                        Le serveur met un peu de temps à répondre (mise en veille possible)…
+                    </p>
+                )}
+            </div>
 
             {/* Zone des cartes : prend tout l'espace restant et scrolle seule */}
             <SortableContext

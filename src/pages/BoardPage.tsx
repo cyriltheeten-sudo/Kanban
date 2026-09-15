@@ -9,6 +9,7 @@ import { useDragAndDrop } from "../hooks/useDragAndDrop";
 import { useParams, useNavigate } from "react-router";
 import type { Card } from "../types";
 import CardModal from "../components/CardModal";
+import Toast from "../components/Toast";
 
 const GEMS = [
     "var(--color-gem-1)",
@@ -164,11 +165,7 @@ export default function BoardPage() {
             </header>
 
             <main className="relative z-10 flex-1 min-h-0 flex flex-col w-full overflow-hidden pt-4 animate-[smoothSlideDown_0.45s_cubic-bezier(0.22,1,0.36,1)_forwards] will-change-[opacity,transform]">
-                {actionError && (
-                    <div className="fixed bottom-4 right-4 z-50 max-w-sm rounded-xl bg-surface border border-red-500/30 px-4 py-3 text-sm text-red-400 shadow-2xl">
-                        {actionError}
-                    </div>
-                )}
+                {actionError && <Toast message={actionError} variant="error" />}
                 {openCard && (
                     <CardModal
                         card={openCard}

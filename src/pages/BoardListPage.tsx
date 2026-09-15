@@ -3,6 +3,8 @@ import { getBoards, createBoard, deleteBoard } from "../api/boards";
 import type { Board, Template } from "../types";
 import { getTemplates } from "../api/template";
 import { useNavigate } from "react-router";
+import Toast from "../components/Toast";
+import { useSlowRequestHint } from "../hooks/useSlowRequestHint";
 
 
 export default function BoardListPage() {
@@ -12,12 +14,21 @@ export default function BoardListPage() {
     const [newName, setNewName] = useState("");
     const [selectedTemplateId, setSelectedTemplateId] = useState<number | null>(null);
     const [isSelectOpen, setIsSelectOpen] = useState(false);
-    const [error, setError] = useState<string | null>(null);
+    const [loadError, setLoadError] = useState<string | null>(null);
+    const [actionError, setActionError] = useState<string | null>(null);
     const [chargement, setChargement] = useState(true);
+    const [isCreating, setIsCreating] = useState(false);
     const [confirmingId, setConfirmingId] = useState<number | null>(null);
     const [nameError, setNameError] = useState(false);
+    const showSlowHint = useSlowRequestHint(isCreating);
 
     const selectRef = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        if (!actionError) return;
+        const t = setTimeout(() => setActionError(null), 4000);
+        return () => clearTimeout(t);
+    }, [actionError]);
 
     const formatDate = (dateString?: string) => {
         if (!dateString) return "";
@@ -40,7 +51,7 @@ export default function BoardListPage() {
                 if (defaut) setSelectedTemplateId(defaut.id);
             })
             .catch((e) => {
-                setError(e instanceof Error ? e.message : "Erreur inconnue");
+                setLoadError(e instanceof Error ? e.message : "Erreur inconnue");
             })
             .finally(() => {
                 setChargement(false);
@@ -63,13 +74,17 @@ export default function BoardListPage() {
             setNameError(true);
             return;
         }
+        if (isCreating) return;
         setNameError(false);
+        setIsCreating(true);
         try {
             const newBoard = await createBoard(name, selectedTemplateId);
             setNewName("");
             setBoards((prev) => [...prev, newBoard]);
         } catch (e) {
-            setError(e instanceof Error ? e.message : "Erreur inconnue");
+            setActionError(e instanceof Error ? e.message : "Erreur inconnue");
+        } finally {
+            setIsCreating(false);
         }
     }
 
@@ -78,7 +93,7 @@ export default function BoardListPage() {
             await deleteBoard(id);
             setBoards((prev) => prev.filter((b) => b.id !== id));
         } catch (e) {
-            setError(e instanceof Error ? e.message : "Erreur inconnue");
+            setActionError(e instanceof Error ? e.message : "Erreur inconnue");
         } finally {
             setConfirmingId(null);
         }
@@ -99,11 +114,11 @@ export default function BoardListPage() {
         );
     }
 
-    if (error) {
+    if (loadError) {
         return (
             <div className="relative min-h-screen w-full bg-app text-ink flex items-center justify-center p-6 overflow-hidden font-sans">
                 <div className="relative z-10 rounded-2xl bg-surface p-6 text-red-400 text-sm shadow-2xl">
-                    Erreur : {error}
+                    Erreur : {loadError}
                 </div>
             </div>
         );
@@ -134,6 +149,8 @@ export default function BoardListPage() {
 
             <main className="relative z-10 flex flex-col items-center w-full max-w-4xl my-auto py-8 gap-8">
 
+                {actionError && <Toast message={actionError} variant="error" />}
+
                 <div className="relative z-30 w-full rounded-3xl bg-surface p-6 sm:p-8">
                     <h2 className="text-xs font-bold tracking-wider text-teal-400 mb-4">
                         Créer un nouveau tableau
@@ -146,8 +163,12 @@ export default function BoardListPage() {
                                 setNewName(e.target.value);
                                 if (nameError) setNameError(false);
                             }}
+                            onKeyDown={(e) => {
+                                if (e.key === "Enter" && !e.repeat) handleCreate();
+                            }}
+                            disabled={isCreating}
                             placeholder="Nom du tableau..."
-                            className={`flex-1 rounded-xl bg-field px-4 py-3 text-sm text-ink placeholder:text-placeholder outline-none transition-colors duration-200 autofill:shadow-[0_0_0_30px_var(--color-field)_inset] autofill:[-webkit-text-fill-color:var(--color-ink)] autofill:caret-white ${nameError ? "ring-1 ring-red-500/60" : ""}`}
+                            className={`flex-1 rounded-xl bg-field px-4 py-3 text-sm text-ink placeholder:text-placeholder outline-none transition-colors duration-200 autofill:shadow-[0_0_0_30px_var(--color-field)_inset] autofill:[-webkit-text-fill-color:var(--color-ink)] autofill:caret-white disabled:opacity-60 ${nameError ? "ring-1 ring-red-500/60" : ""}`}
                         />
 
                         <div className="relative min-w-50" ref={selectRef}>
@@ -186,11 +207,25 @@ export default function BoardListPage() {
 
                         <button
                             onClick={handleCreate}
-                            className="rounded-xl bg-linear-to-r from-teal-400 to-emerald-400 hover:from-teal-300 hover:to-emerald-300 text-black font-semibold text-sm px-6 py-3 transition-colors duration-200 active:scale-[0.98] shrink-0"
+                            disabled={isCreating}
+                            className="rounded-xl bg-linear-to-r from-teal-400 to-emerald-400 hover:from-teal-300 hover:to-emerald-300 text-black font-semibold text-sm px-6 py-3 transition-colors duration-200 active:scale-[0.98] shrink-0 disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                         >
-                            Créer
+                            {isCreating ? (
+                                <>
+                                    <span className="w-4 h-4 border-2 border-black/30 border-t-black rounded-full animate-spin" />
+                                    <span>Création...</span>
+                                </>
+                            ) : (
+                                "Créer"
+                            )}
                         </button>
                     </div>
+
+                    {showSlowHint && (
+                        <p className="mt-3 text-[11px] text-faint text-center sm:text-left animate-pulse">
+                            Le serveur met un peu de temps à répondre (mise en veille possible, jusqu'à 30 s)…
+                        </p>
+                    )}
                 </div>
 
                 <div className="relative z-10 w-full rounded-3xl bg-surface p-6 sm:p-8">
