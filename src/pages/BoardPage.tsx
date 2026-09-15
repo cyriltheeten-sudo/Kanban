@@ -9,6 +9,7 @@ import { useDragAndDrop } from "../hooks/useDragAndDrop";
 import { useParams, useNavigate } from "react-router";
 import type { Card } from "../types";
 import CardModal from "../components/CardModal";
+import CardViewModal from "../components/CardViewModal";
 import Toast from "../components/Toast";
 
 const GEMS = [
@@ -33,6 +34,7 @@ export default function BoardPage() {
     const [newCardTitles, setNewCardTitles] = useState<Record<number, string>>({});
     const [addingColumns, setAddingColumns] = useState<Record<number, boolean>>({});
     const [openCard, setOpenCard] = useState<Card | null>(null);
+    const [viewingCard, setViewingCard] = useState<Card | null>(null);
     const [editingName, setEditingName] = useState(false);
     const [nameDraft, setNameDraft] = useState("");
 
@@ -166,6 +168,15 @@ export default function BoardPage() {
 
             <main className="relative z-10 flex-1 min-h-0 flex flex-col w-full overflow-hidden pt-4 animate-[smoothSlideDown_0.45s_cubic-bezier(0.22,1,0.36,1)_forwards] will-change-[opacity,transform]">
                 {actionError && <Toast message={actionError} variant="error" />}
+                {viewingCard && (
+                    <CardViewModal
+                        card={viewingCard}
+                        columns={board.columns}
+                        gems={GEMS}
+                        onClose={() => setViewingCard(null)}
+                        onEdit={() => { setViewingCard(null); setOpenCard(viewingCard); }}
+                    />
+                )}
                 {openCard && (
                     <CardModal
                         card={openCard}
@@ -198,6 +209,7 @@ export default function BoardPage() {
                                 onNewCardTitleChange={handleNewCardTitleChange}
                                 onAddCard={handleAddCard}
                                 onOpenCard={setOpenCard}
+                                onViewCard={setViewingCard}
                             />
                         ))}
                     </div>

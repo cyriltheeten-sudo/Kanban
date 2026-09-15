@@ -13,6 +13,7 @@ interface ColumnViewProps {
     onNewCardTitleChange: (columnId: number, value: string) => void;
     onAddCard: (columnId: number) => void;
     onOpenCard: (card: Card) => void;
+    onViewCard: (card: Card) => void;
 }
 
 export default function ColumnView({
@@ -24,6 +25,7 @@ export default function ColumnView({
     onNewCardTitleChange,
     onAddCard,
     onOpenCard,
+    onViewCard,
 }: ColumnViewProps) {
     const { setNodeRef, isOver } = useDroppable({ id: `column-${column.id}` });
     const showSlowHint = useSlowRequestHint(isAddingCard);
@@ -75,7 +77,7 @@ export default function ColumnView({
             >
                 <div className="flex-1 min-h-0 overflow-y-auto flex flex-col gap-2 pr-1">
                     {column.cards.map((card) => (
-                        <CardView key={card.id} card={card} gem={gem} gemByColumnId={gemByColumnId} onOpen={onOpenCard} />
+                        <CardView key={card.id} card={card} gem={gem} gemByColumnId={gemByColumnId} onOpen={onOpenCard} onView={onViewCard} />
                     ))}
                 </div>
             </SortableContext>

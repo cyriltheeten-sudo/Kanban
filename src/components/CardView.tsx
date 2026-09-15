@@ -7,9 +7,10 @@ interface CardViewProps {
     gem: string;
     gemByColumnId: Record<number, string>;
     onOpen: (card: Card) => void;
+    onView: (card: Card) => void;
 }
 
-export default function CardView({ card, gem, gemByColumnId, onOpen }: CardViewProps) {
+export default function CardView({ card, gem, gemByColumnId, onOpen, onView }: CardViewProps) {
     const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
         useSortable({ id: `card-${card.id}` });
 
@@ -58,13 +59,22 @@ export default function CardView({ card, gem, gemByColumnId, onOpen }: CardViewP
                 </div>
             )}
 
-            <button
-                onClick={(e) => { e.stopPropagation(); onOpen(card); }}
-                className="w-full rounded-lg bg-field py-1.5 text-xs text-faint hover:text-ink transition-colors"
-                title="Ouvrir la carte"
-            >
-                Ouvrir
-            </button>
+            <div className="flex gap-1.5">
+                <button
+                    onClick={(e) => { e.stopPropagation(); onView(card); }}
+                    className="flex-1 rounded-lg bg-field py-1.5 text-xs text-faint hover:text-ink transition-colors"
+                    title="Voir la fiche"
+                >
+                    Voir
+                </button>
+                <button
+                    onClick={(e) => { e.stopPropagation(); onOpen(card); }}
+                    className="flex-1 rounded-lg bg-field py-1.5 text-xs text-faint hover:text-ink transition-colors"
+                    title="Modifier la carte"
+                >
+                    Modifier
+                </button>
+            </div>
         </div>
     );
 }
