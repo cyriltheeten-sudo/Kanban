@@ -7,6 +7,7 @@ interface ColumnViewProps {
     column: Column;
     gem: string;
     newCardTitle: string;
+    isAddingCard: boolean;
     gemByColumnId: Record<number, string>;
     onNewCardTitleChange: (columnId: number, value: string) => void;
     onAddCard: (columnId: number) => void;
@@ -18,6 +19,7 @@ export default function ColumnView({
     gem,
     gemByColumnId,
     newCardTitle,
+    isAddingCard,
     onNewCardTitleChange,
     onAddCard,
     onOpenCard,
@@ -44,9 +46,12 @@ export default function ColumnView({
             <input
                 value={newCardTitle}
                 onChange={(e) => onNewCardTitleChange(column.id, e.target.value)}
-                onKeyDown={(e) => e.key === "Enter" && onAddCard(column.id)}
+                onKeyDown={(e) => {
+                    if (e.key === "Enter" && !e.repeat) onAddCard(column.id);
+                }}
+                disabled={isAddingCard}
                 placeholder="+ Nouvelle carte"
-                className="shrink-0 mb-3 w-full rounded-xl bg-field px-4 py-2.5 text-sm text-ink placeholder:text-placeholder outline-none transition-colors duration-200 focus-visible:ring-1 focus-visible:ring-teal-500/30 autofill:shadow-[0_0_0_30px_var(--color-field)_inset] autofill:[-webkit-text-fill-color:var(--color-ink)] autofill:caret-white"
+                className="shrink-0 mb-3 w-full rounded-xl bg-field px-4 py-2.5 text-sm text-ink placeholder:text-placeholder outline-none transition-colors duration-200 focus-visible:ring-1 focus-visible:ring-teal-500/30 autofill:shadow-[0_0_0_30px_var(--color-field)_inset] autofill:[-webkit-text-fill-color:var(--color-ink)] autofill:caret-white disabled:opacity-60"
             />
 
             {/* Zone des cartes : prend tout l'espace restant et scrolle seule */}

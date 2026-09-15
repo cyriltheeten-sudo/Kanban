@@ -30,6 +30,7 @@ export default function BoardPage() {
     const { sensors, activeCard, handleDragStart, handleDragEnd } =
         useDragAndDrop(board, setBoard, loadBoard, setActionError);
     const [newCardTitles, setNewCardTitles] = useState<Record<number, string>>({});
+    const [addingColumns, setAddingColumns] = useState<Record<number, boolean>>({});
     const [openCard, setOpenCard] = useState<Card | null>(null);
     const [editingName, setEditingName] = useState(false);
     const [nameDraft, setNameDraft] = useState("");
@@ -43,13 +44,16 @@ export default function BoardPage() {
 
     async function handleAddCard(columnId: number) {
         const title = newCardTitles[columnId]?.trim();
-        if (!title) return;
+        if (!title || addingColumns[columnId]) return;
+        setAddingColumns((prev) => ({ ...prev, [columnId]: true }));
         try {
             await createCard(title, columnId);
             setNewCardTitles((prev) => ({ ...prev, [columnId]: "" }));
             loadBoard();
         } catch (e) {
             setActionError(e instanceof Error ? e.message : "Erreur inconnue");
+        } finally {
+            setAddingColumns((prev) => ({ ...prev, [columnId]: false }));
         }
     }
 
@@ -193,6 +197,7 @@ export default function BoardPage() {
                                 gem={GEMS[index % GEMS.length]}
                                 gemByColumnId={gemByColumnId}
                                 newCardTitle={newCardTitles[col.id] ?? ""}
+                                isAddingCard={addingColumns[col.id] ?? false}
                                 onNewCardTitleChange={handleNewCardTitleChange}
                                 onAddCard={handleAddCard}
                                 onOpenCard={setOpenCard}
