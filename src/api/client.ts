@@ -9,9 +9,9 @@ export async function apiFetch<T>(
   const token = localStorage.getItem("token");
   const connectionId = getConnectionId();
 
-  let reponse: Response;
+  let response: Response;
   try {
-    reponse = await fetch(`${API_URL}${endpoint}`, {
+    response = await fetch(`${API_URL}${endpoint}`, {
       ...options,
       headers: {
         "Content-Type": "application/json",
@@ -24,22 +24,22 @@ export async function apiFetch<T>(
     throw new Error("Connexion au serveur impossible. Vérifie ta connexion et réessaie.", { cause: e });
   }
 
-if (reponse.status === 401) {
+if (response.status === 401) {
     localStorage.removeItem("token");
     redirectToLogin();
     throw new Error("Session expirée");
 }
 
-if (reponse.status === 429) {
+if (response.status === 429) {
     // Le serveur a mis un message explicite dans le corps → on le récupère
-    const data = await reponse.json().catch(() => null);
+    const data = await response.json().catch(() => null);
     throw new Error(data?.message ?? "Trop de tentatives. Réessaie plus tard.");
 }
 
-if (!reponse.ok) {
-    throw new Error("Une erreur est survenue. Réessaie dans un instant.", { cause: reponse.status });
+if (!response.ok) {
+    throw new Error("Une erreur est survenue. Réessaie dans un instant.", { cause: response.status });
 }
-  if (reponse.status === 204) return undefined as T;
+  if (response.status === 204) return undefined as T;
 
-  return (await reponse.json()) as T;
+  return (await response.json()) as T;
 }
