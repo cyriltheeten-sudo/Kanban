@@ -7,7 +7,15 @@ export function useBoard(boardId: number) {
     const [error, setError] = useState<string | null>(null);
 
     const loadBoard = useCallback(() => {
-        getBoard(boardId).then(setBoard).catch((e) => setError(e.message));
+        const request = Number.isNaN(boardId)
+            ? Promise.reject(new Error("Tableau introuvable."))
+            : getBoard(boardId);
+        request
+            .then((b) => {
+                setBoard(b);
+                setError(null);
+            })
+            .catch((e) => setError(e.message));
     }, [boardId]);
 
     useEffect(() => {

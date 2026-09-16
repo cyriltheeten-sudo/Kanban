@@ -4,6 +4,8 @@ import { setConnectionId } from "../api/realtime";
 
 export function useBoardRealTime(boardId: number, loadBoard: () => void) {
     useEffect(() => {
+        if (Number.isNaN(boardId)) return;
+
         const connection = new signalR.HubConnectionBuilder()
             .withUrl(`${import.meta.env.VITE_API_URL}/hubs/kanban`)
             .withAutomaticReconnect()
@@ -13,7 +15,11 @@ export function useBoardRealTime(boardId: number, loadBoard: () => void) {
             loadBoard();
         });
 
-        connection.onreconnected((id) => setConnectionId(id ?? null));
+        connection.onreconnected((id) => {
+            setConnectionId(id ?? null);
+            connection.invoke("JoinBoard", boardId).catch((err) => console.error("SignalR erreur :", err));
+            loadBoard();
+        });
 
         connection
             .start()

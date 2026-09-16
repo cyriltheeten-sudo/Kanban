@@ -207,7 +207,7 @@ export default function BoardPage() {
                         columns={board.columns}
                         gems={GEMS}
                         onClose={() => setOpenCard(null)}
-                        onSaved={() => { setOpenCard(null); loadBoard(); }}
+                        onSaved={loadBoard}
                         onDelete={async () => {
                             await handleDeleteCard(openCard.id);
                             setOpenCard(null);

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type { Card, Column } from "../types";
 import { updateCard, upsertCardEntry } from "../api/cards";
 
@@ -25,6 +25,14 @@ export default function CardModal({ card, columns, gems, onClose, onSaved, onDel
     const [savingColumnId, setSavingColumnId] = useState<number | null>(null);
     const [error, setError] = useState<string | null>(null);
     const [confirmingDelete, setConfirmingDelete] = useState(false)
+
+    useEffect(() => {
+        function handleKeyDown(e: KeyboardEvent) {
+            if (e.key === "Escape") onClose();
+        }
+        window.addEventListener("keydown", handleKeyDown);
+        return () => window.removeEventListener("keydown", handleKeyDown);
+    }, [onClose]);
 
     async function handleSaveTitle() {
         const next = titleDraft.trim();
