@@ -1,13 +1,14 @@
 import { useEffect } from "react";
 import * as signalR from "@microsoft/signalr";
 import { setConnectionId } from "../api/realtime";
+import { API_BASE_URL } from "../api/config";
 
 export function useBoardRealTime(boardId: number, loadBoard: () => void) {
     useEffect(() => {
         if (Number.isNaN(boardId)) return;
 
         const connection = new signalR.HubConnectionBuilder()
-            .withUrl(`${import.meta.env.VITE_API_URL}/hubs/kanban`)
+            .withUrl(`${API_BASE_URL}/hubs/kanban`)
             .withAutomaticReconnect()
             .build();
 

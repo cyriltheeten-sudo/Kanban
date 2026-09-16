@@ -1,4 +1,4 @@
-const API = `${import.meta.env.VITE_API_URL}/api`;
+import { API_URL } from "./config";
 
 export interface LoginResponse {
   token: string;
@@ -6,7 +6,7 @@ export interface LoginResponse {
 }
 
 export async function login(email: string, password: string): Promise<LoginResponse> {
-  const reponse = await fetch(`${API}/auth/login`, {
+  const reponse = await fetch(`${API_URL}/auth/login`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ email, password }),

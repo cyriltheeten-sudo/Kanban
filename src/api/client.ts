@@ -1,7 +1,6 @@
 import { getConnectionId } from "./realtime";
 import { redirectToLogin } from "./navigation";
-
-const API = `${import.meta.env.VITE_API_URL}/api`;
+import { API_URL } from "./config";
 
 export async function apiFetch<T>(
   endpoint: string,
@@ -12,7 +11,7 @@ export async function apiFetch<T>(
 
   let reponse: Response;
   try {
-    reponse = await fetch(`${API}${endpoint}`, {
+    reponse = await fetch(`${API_URL}${endpoint}`, {
       ...options,
       headers: {
         "Content-Type": "application/json",

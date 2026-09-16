@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { updateBoard } from "../api/boards";
 import { createCard, deleteCard, moveCard } from "../api/cards";
 import ColumnView from "../components/ColumnView";
@@ -6,11 +6,13 @@ import { DndContext, pointerWithin, DragOverlay } from "@dnd-kit/core";
 import { useBoard } from "../hooks/useBoard";
 import { useBoardRealTime } from "../hooks/useBoardRealTime";
 import { useDragAndDrop } from "../hooks/useDragAndDrop";
+import { useAutoDismiss } from "../hooks/useAutoDismiss";
 import { useParams, useNavigate } from "react-router";
 import type { Card } from "../types";
 import CardModal from "../components/CardModal";
 import CardViewModal from "../components/CardViewModal";
 import Toast from "../components/Toast";
+import LogoutButton from "../components/LogoutButton";
 
 const GEMS = [
     "var(--color-gem-1)",
@@ -40,11 +42,7 @@ export default function BoardPage() {
     const [nameDraft, setNameDraft] = useState("");
 
 
-    useEffect(() => {
-        if (!actionError) return;
-        const t = setTimeout(() => setActionError(null), 4000);
-        return () => clearTimeout(t);
-    }, [actionError]);
+    useAutoDismiss(actionError, setActionError);
 
     async function handleAddCard(columnId: number) {
         const title = newCardTitles[columnId]?.trim();
@@ -175,19 +173,7 @@ export default function BoardPage() {
                     )}
                 </div>
 
-                <button
-                    onClick={() => {
-                        localStorage.removeItem("token");
-                        navigate("/login");
-                    }}
-                    title="Déconnexion"
-                    className="text-xs px-2.5 py-2 sm:px-3 sm:py-1.5 rounded-xl text-muted hover:text-ink bg-raised hover:bg-btn-hover transition-colors duration-200 active:scale-[0.98] flex items-center gap-1.5 shrink-0"
-                >
-                    <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 5v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-                    </svg>
-                    <span className="hidden sm:inline">Déconnexion</span>
-                </button>
+                <LogoutButton className="text-xs px-2.5 py-2 sm:px-3 sm:py-1.5 rounded-xl text-muted hover:text-ink bg-raised hover:bg-btn-hover transition-colors duration-200 active:scale-[0.98] flex items-center gap-1.5 shrink-0" />
             </header>
 
             <main className="relative z-10 flex-1 min-h-0 flex flex-col w-full overflow-hidden pt-4 animate-[smoothSlideDown_0.45s_cubic-bezier(0.22,1,0.36,1)_forwards] will-change-[opacity,transform]">
