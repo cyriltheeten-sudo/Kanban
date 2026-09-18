@@ -32,7 +32,7 @@ Generic boards give you empty columns and don't care what you put in them. GemBo
 
 | Layer | Technologies |
 |---|---|
-| **Frontend** | React 19 · TypeScript · Vite · Tailwind CSS v4 · React Router v7 · @dnd-kit · @microsoft/signalr |
+| **Frontend** | React 19 · TypeScript · Vite · Tailwind CSS v4 · React Router v7 · @dnd-kit · @microsoft/signalr · Vitest |
 | **Backend** | ASP.NET Core (.NET 8) · Entity Framework Core · SignalR · PostgreSQL · JWT |
 | **Infra** | Frontend on Vercel · API on Render (Docker) · Database on Neon |
 
@@ -75,10 +75,16 @@ npm run dev
 
 ## Testing
 
-The API is covered by **30 xUnit unit tests** on the service layer (business logic + per-user data isolation), using EF Core's in-memory provider so each test runs in isolation.
+The API is covered by **30 xUnit unit tests** on the service layer (business logic + per-user data isolation), using EF Core's in-memory provider so each test runs in isolation, plus an **integration test suite** that drives the real HTTP pipeline end-to-end (real JWTs, two distinct users) to verify the object-level authorization boundary — e.g. a user moving their own card into another user's column, or writing an entry on a card they don't own, gets a `404` and the data is left untouched.
 
 ```bash
 dotnet test
+```
+
+The frontend's `hooks/` and `utils/` are covered by a **Vitest** suite. See [testing.md](testing.md) for what's covered and how it's set up.
+
+```bash
+npm test
 ```
 
 ## Screenshots
