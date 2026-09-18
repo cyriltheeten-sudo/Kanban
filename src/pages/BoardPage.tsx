@@ -1,12 +1,10 @@
 import { useState } from "react";
-import { updateBoard } from "../api/boards";
-import { createCard, deleteCard, moveCard } from "../api/cards";
 import ColumnView from "../components/ColumnView";
 import { DndContext, pointerWithin, DragOverlay } from "@dnd-kit/core";
 import { useBoard } from "../hooks/useBoard";
 import { useBoardRealTime } from "../hooks/useBoardRealTime";
 import { useDragAndDrop } from "../hooks/useDragAndDrop";
-import { useAutoDismiss } from "../hooks/useAutoDismiss";
+import { useBoardActions } from "../hooks/useBoardActions";
 import { useParams, useNavigate } from "react-router";
 import type { Card } from "../types";
 import CardModal from "../components/CardModal";
@@ -29,79 +27,28 @@ export default function BoardPage() {
     const { boardId } = useParams();
     const id = Number(boardId);
     const { board, setBoard, error, loadBoard } = useBoard(id);
-    const [actionError, setActionError] = useState<string | null>(null);
+    const {
+        actionError,
+        setActionError,
+        newCardTitles,
+        addingColumns,
+        movingCardId,
+        editingName,
+        nameDraft,
+        setNameDraft,
+        handleNewCardTitleChange,
+        handleAddCard,
+        handleDeleteCard,
+        handleMoveCard,
+        startEditingName,
+        cancelEditingName,
+        handleSaveName,
+    } = useBoardActions(board, loadBoard);
     useBoardRealTime(id, loadBoard);
     const { sensors, activeCard, handleDragStart, handleDragEnd } =
         useDragAndDrop(board, setBoard, loadBoard, setActionError);
-    const [newCardTitles, setNewCardTitles] = useState<Record<number, string>>({});
-    const [addingColumns, setAddingColumns] = useState<Record<number, boolean>>({});
     const [openCard, setOpenCard] = useState<Card | null>(null);
     const [viewingCard, setViewingCard] = useState<Card | null>(null);
-    const [movingCardId, setMovingCardId] = useState<number | null>(null);
-    const [editingName, setEditingName] = useState(false);
-    const [nameDraft, setNameDraft] = useState("");
-
-
-    useAutoDismiss(actionError, setActionError);
-
-    async function handleAddCard(columnId: number) {
-        const title = newCardTitles[columnId]?.trim();
-        if (!title || addingColumns[columnId]) return;
-        setAddingColumns((prev) => ({ ...prev, [columnId]: true }));
-        try {
-            await createCard(title, columnId);
-            setNewCardTitles((prev) => ({ ...prev, [columnId]: "" }));
-            loadBoard();
-        } catch (e) {
-            setActionError(e instanceof Error ? e.message : "Erreur inconnue");
-        } finally {
-            setAddingColumns((prev) => ({ ...prev, [columnId]: false }));
-        }
-    }
-
-    async function handleDeleteCard(id: number) {
-        try { await deleteCard(id); loadBoard(); }
-        catch (e) { setActionError(e instanceof Error ? e.message : "Erreur inconnue"); }
-    }
-
-    async function handleMoveCard(cardId: number, targetColumnId: number) {
-        if (!board || movingCardId) return;
-        const target = board.columns.find((c) => c.id === targetColumnId);
-        if (!target) return;
-        setMovingCardId(cardId);
-        try {
-            await moveCard(cardId, targetColumnId, target.cards.length);
-            loadBoard();
-        } catch (e) {
-            setActionError(e instanceof Error ? e.message : "Erreur inconnue");
-        } finally {
-            setMovingCardId(null);
-        }
-    }
-
-    function startEditingName() {
-        if (!board) return;
-        setNameDraft(board.name);
-        setEditingName(true);
-    }
-
-    async function handleSaveName() {
-        if (!board) return;
-        const next = nameDraft.trim();
-        setEditingName(false);
-        if (!next || next === board.name) return;   // rien à changer
-        try {
-            await updateBoard(board.id, next);
-            loadBoard();
-        } catch (e) {
-            setActionError(e instanceof Error ? e.message : "Erreur inconnue");
-        }
-    }
-
-    function handleNewCardTitleChange(columnId: number, value: string) {
-        setNewCardTitles((prev) => ({ ...prev, [columnId]: value }));
-    }
-
 
     if (error) {
         return (
@@ -155,10 +102,10 @@ export default function BoardPage() {
                             autoFocus
                             value={nameDraft}
                             onChange={(e) => setNameDraft(e.target.value)}
-                            onBlur={() => setEditingName(false)}
+                            onBlur={cancelEditingName}
                             onKeyDown={(e) => {
                                 if (e.key === "Enter") handleSaveName();
-                                if (e.key === "Escape") setEditingName(false);
+                                if (e.key === "Escape") cancelEditingName();
                             }}
                             className="text-sm sm:text-base font-semibold bg-field text-ink rounded-lg px-2 py-1 outline-none focus-visible:ring-1 focus-visible:ring-teal-500/30 min-w-0"
                         />
