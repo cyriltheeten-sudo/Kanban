@@ -1,6 +1,10 @@
 @import "tailwindcss";
 @import "./styles/theme.css";
- 
+
+html {
+  scrollbar-gutter: stable;
+}
+
 body {
   background: var(--color-app);
 }
